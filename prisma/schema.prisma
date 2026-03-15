@@ -1,0 +1,185 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+}
+
+model User {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId       Int      @unique
+  name         String
+  phone        String?
+  email        String   @unique
+  walletMoney  Float    @default(0)
+  userType     String   @default("Retail")
+  signupType   String   @default("App/Admin")
+  signupFrom   String   @default("Application")
+  country      String?
+  status       String   @default("Active")
+  registeredAt DateTime @default(now())
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Driver {
+  id             String   @id @default(auto()) @map("_id") @db.ObjectId
+  driverId       Int      @unique
+  name           String
+  phone          String?
+  email          String   @unique
+  serviceArea    String?
+  country        String?
+  totalOrders    Int      @default(0)
+  rating         Float    @default(0)
+  earning        Float    @default(0)
+  walletMoney    Float    @default(0)
+  status         String   @default("Offline")
+  approvalStatus String   @default("Approved")
+  lastLocation   String?
+  vehicleType    String?
+  registeredAt   DateTime @default(now())
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model Store {
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  name        String
+  phone       String?
+  email       String    @unique
+  address     String?
+  image       String?
+  loginUrl    String?
+  rating      Float     @default(5.0)
+  walletMoney Float     @default(0)
+  status      String    @default("Active")
+  serviceArea String?
+  segment     String    @default("GROCERY")
+  totalOrders Int       @default(0)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  orders      Order[]
+  products    Product[]
+}
+
+model Product {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  name        String
+  description String?
+  price       Float
+  image       String?
+  status      String   @default("Active")
+  category    String?
+  storeId     String   @db.ObjectId
+  store       Store    @relation(fields: [storeId], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Order {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  orderId   String   @unique
+  storeId   String   @db.ObjectId
+  store     Store    @relation(fields: [storeId], references: [id])
+  userId    String?
+  driverId  String?
+  total     Float
+  status    String   @default("Pending")
+  items     Json
+  address   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Category {
+  id             String   @id @default(auto()) @map("_id") @db.ObjectId
+  name           String
+  segment        String   @default("Epicerie")
+  parentCategory String?
+  image          String?
+  sequence       Int      @default(1)
+  status         String   @default("Active")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model PromoCode {
+  id        String    @id @default(auto()) @map("_id") @db.ObjectId
+  code      String    @unique
+  discount  Float
+  type      String    @default("Percentage")
+  maxUses   Int?
+  usedCount Int       @default(0)
+  expiresAt DateTime?
+  status    String    @default("Active")
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model Country {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  name      String
+  code      String   @unique
+  status    String   @default("Active")
+  createdAt DateTime @default(now())
+}
+
+model ServiceArea {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  name      String
+  country   String
+  status    String   @default("Active")
+  createdAt DateTime @default(now())
+}
+
+model Vehicle {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  name      String
+  image     String?
+  status    String   @default("Active")
+  createdAt DateTime @default(now())
+}
+
+model SliderBanner {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  title     String?
+  image     String
+  link      String?
+  sequence  Int      @default(1)
+  status    String   @default("Active")
+  createdAt DateTime @default(now())
+}
+
+model Notification {
+  id        String    @id @default(auto()) @map("_id") @db.ObjectId
+  title     String
+  message   String
+  target    String    @default("All")
+  sentAt    DateTime?
+  status    String    @default("Draft")
+  createdAt DateTime  @default(now())
+}
+
+model Transaction {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId      String?
+  driverId    String?
+  amount      Float
+  type        String
+  description String?
+  status      String   @default("Completed")
+  createdAt   DateTime @default(now())
+}
+
+model Admin {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  name      String
+  email     String   @unique
+  password  String
+  role      String   @default("SubAdmin")
+  status    String   @default("Active")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
