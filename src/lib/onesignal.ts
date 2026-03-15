@@ -11,12 +11,8 @@ export async function initOneSignal() {
   await OneSignal.init({
     appId: ONESIGNAL_APP_ID,
     allowLocalhostAsSecureOrigin: true,
-    notifyButton: {
-      enable: false,
-      prenotify: false,
-      showCredit: false,
-      text: {},
-    },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    notifyButton: { enable: false } as any,
     serviceWorkerParam: { scope: "/" },
   })
 }
