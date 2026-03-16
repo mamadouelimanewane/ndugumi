@@ -61,6 +61,7 @@ function LoginContent() {
     await new Promise(r => setTimeout(r, 1500))
     if (password.length >= 4) {
       router.push(`/merchant/dashboard?store=${storeId || "1"}`)
+      // Note: /merchant/(store)/dashboard est le nouveau backoffice complet
     } else {
       setError("Mot de passe incorrect")
       setLoggingIn(false)
