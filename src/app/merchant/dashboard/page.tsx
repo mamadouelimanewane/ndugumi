@@ -1,5 +1,7 @@
 "use client"
 
+export const dynamic = "force-dynamic"
+
 import { useSearchParams } from "next/navigation"
 import { ShoppingBag, TrendingUp, Star, Wallet, Package, Bell, Settings, LogOut, ChefHat } from "lucide-react"
 
