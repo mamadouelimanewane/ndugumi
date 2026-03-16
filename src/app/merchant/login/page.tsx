@@ -1,12 +1,9 @@
 "use client"
 
-export const dynamic = "force-dynamic"
-
-import { useEffect, useState } from "react"
+import { Suspense, useEffect, useState } from "react"
 import { useSearchParams, useRouter } from "next/navigation"
 import { Loader2, Store, CheckCircle, AlertCircle, Eye, EyeOff } from "lucide-react"
 
-// Données mock des magasins (à remplacer par une requête API)
 const mockStores: Record<string, { name: string; email: string; id: number }> = {
   "1": { id: 1, name: "Marché Dior", email: "Marchedior@gmail.com" },
   "2": { id: 2, name: "Le Marché des Professionnels", email: "ndugumipro@gmail.com" },
@@ -24,11 +21,10 @@ function generateToken(storeId: number, email: string): string {
 function validateToken(storeId: string, token: string): boolean {
   const store = mockStores[storeId]
   if (!store) return false
-  const expected = generateToken(store.id, store.email)
-  return token === expected
+  return token === generateToken(store.id, store.email)
 }
 
-export default function MerchantLoginPage() {
+function LoginContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
 
@@ -44,11 +40,9 @@ export default function MerchantLoginPage() {
   const store = mockStores[storeId]
 
   useEffect(() => {
-    // Simule vérification du token côté serveur
     const timer = setTimeout(() => {
       if (storeId && token && validateToken(storeId, token)) {
         setStatus("valid")
-        // Auto-connexion après 1.5s si token valide
         setTimeout(() => setStatus("form"), 1500)
       } else if (storeId || token) {
         setStatus("invalid")
@@ -64,11 +58,9 @@ export default function MerchantLoginPage() {
     if (!password) { setError("Mot de passe requis"); return }
     setLoggingIn(true)
     setError("")
-    // Simule appel API
     await new Promise(r => setTimeout(r, 1500))
-    if (password === "demo1234" || password.length >= 4) {
-      // Succès : redirige vers le tableau de bord vendeur
-      router.push(`/merchant/dashboard?store=${storeId}`)
+    if (password.length >= 4) {
+      router.push(`/merchant/dashboard?store=${storeId || "1"}`)
     } else {
       setError("Mot de passe incorrect")
       setLoggingIn(false)
@@ -78,7 +70,6 @@ export default function MerchantLoginPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-cyan-50 via-white to-blue-50 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
-        {/* Logo / Brand */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-16 h-16 bg-cyan-500 rounded-2xl shadow-lg mb-4">
             <Store size={32} className="text-white" />
@@ -88,8 +79,6 @@ export default function MerchantLoginPage() {
         </div>
 
         <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
-
-          {/* Loading */}
           {status === "loading" && (
             <div className="p-8 text-center">
               <Loader2 size={40} className="text-cyan-500 animate-spin mx-auto mb-4" />
@@ -98,7 +87,6 @@ export default function MerchantLoginPage() {
             </div>
           )}
 
-          {/* Token valid — transition */}
           {status === "valid" && store && (
             <div className="p-8 text-center">
               <CheckCircle size={48} className="text-green-500 mx-auto mb-4" />
@@ -110,13 +98,12 @@ export default function MerchantLoginPage() {
             </div>
           )}
 
-          {/* Token invalide */}
           {status === "invalid" && (
             <div className="p-8 text-center">
               <AlertCircle size={48} className="text-red-400 mx-auto mb-4" />
               <h2 className="text-lg font-semibold text-gray-800 mb-1">Lien invalide</h2>
               <p className="text-gray-500 text-sm">Ce lien de connexion est expiré ou incorrect.</p>
-              <p className="text-gray-400 text-xs mt-2">Demandez un nouveau lien à l'administrateur.</p>
+              <p className="text-gray-400 text-xs mt-2">Demandez un nouveau lien à l&apos;administrateur.</p>
               <button
                 onClick={() => setStatus("form")}
                 className="mt-6 w-full py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-sm font-medium transition-colors"
@@ -126,7 +113,6 @@ export default function MerchantLoginPage() {
             </div>
           )}
 
-          {/* Formulaire de connexion */}
           {status === "form" && (
             <form onSubmit={handleLogin} className="p-6 space-y-4">
               <div className="mb-2">
@@ -138,7 +124,6 @@ export default function MerchantLoginPage() {
                 </p>
               </div>
 
-              {/* Email (pré-rempli si store connu) */}
               <div>
                 <label className="text-xs font-semibold text-gray-600 mb-1.5 block">Email</label>
                 <input
@@ -150,7 +135,6 @@ export default function MerchantLoginPage() {
                 />
               </div>
 
-              {/* Password */}
               <div>
                 <label className="text-xs font-semibold text-gray-600 mb-1.5 block">Mot de passe</label>
                 <div className="relative">
@@ -184,15 +168,13 @@ export default function MerchantLoginPage() {
                 className="w-full py-3 bg-cyan-500 hover:bg-cyan-600 disabled:bg-cyan-300 text-white rounded-xl text-sm font-semibold transition-colors flex items-center justify-center gap-2"
               >
                 {loggingIn ? (
-                  <>
-                    <Loader2 size={16} className="animate-spin" />
-                    Connexion...
-                  </>
+                  <><Loader2 size={16} className="animate-spin" />Connexion...</>
                 ) : "Se connecter"}
               </button>
 
               <p className="text-center text-xs text-gray-400 mt-2">
-                Mot de passe oublié ? <span className="text-cyan-500 cursor-pointer hover:underline">Contacter l'admin</span>
+                Mot de passe oublié ?{" "}
+                <span className="text-cyan-500 cursor-pointer hover:underline">Contacter l&apos;admin</span>
               </p>
             </form>
           )}
@@ -203,5 +185,17 @@ export default function MerchantLoginPage() {
         </p>
       </div>
     </div>
+  )
+}
+
+export default function MerchantLoginPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gradient-to-br from-cyan-50 via-white to-blue-50 flex items-center justify-center">
+        <Loader2 size={32} className="text-cyan-500 animate-spin" />
+      </div>
+    }>
+      <LoginContent />
+    </Suspense>
   )
 }

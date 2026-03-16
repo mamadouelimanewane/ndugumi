@@ -1,9 +1,8 @@
 "use client"
 
-export const dynamic = "force-dynamic"
-
+import { Suspense } from "react"
 import { useSearchParams } from "next/navigation"
-import { ShoppingBag, TrendingUp, Star, Wallet, Package, Bell, Settings, LogOut, ChefHat } from "lucide-react"
+import { ShoppingBag, TrendingUp, Star, Wallet, Package, Bell, Settings, LogOut, ChefHat, Loader2 } from "lucide-react"
 
 const mockStores: Record<string, { name: string; email: string }> = {
   "1": { name: "Marché Dior", email: "Marchedior@gmail.com" },
@@ -36,7 +35,7 @@ const statusColors: Record<string, string> = {
   "Annulé": "bg-red-100 text-red-700",
 }
 
-export default function MerchantDashboardPage() {
+function DashboardContent() {
   const searchParams = useSearchParams()
   const storeId = searchParams.get("store") ?? "1"
   const store = mockStores[storeId] ?? { name: "Mon Magasin", email: "" }
@@ -71,7 +70,6 @@ export default function MerchantDashboardPage() {
       </nav>
 
       <div className="max-w-6xl mx-auto px-4 py-6 space-y-6">
-        {/* Welcome */}
         <div>
           <h1 className="text-xl font-bold text-gray-800">Tableau de bord</h1>
           <p className="text-gray-500 text-sm">Bienvenue sur votre espace de gestion · {store.email}</p>
@@ -144,5 +142,17 @@ export default function MerchantDashboardPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function MerchantDashboardPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <Loader2 size={32} className="text-cyan-500 animate-spin" />
+      </div>
+    }>
+      <DashboardContent />
+    </Suspense>
   )
 }
