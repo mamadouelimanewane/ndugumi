@@ -6,6 +6,9 @@ jobs:
   build_user_app:
     name: Build User App APK
     runs-on: ubuntu-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE20: true
+      EAS_PKG_MANAGER: npm
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -14,8 +17,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 18
-          cache: 'npm'
-          cache-dependency-path: 'mobile/user-app/package-lock.json'
 
       - name: Setup Java
         uses: actions/setup-java@v3
@@ -46,6 +47,9 @@ jobs:
   build_driver_app:
     name: Build Driver App APK
     runs-on: ubuntu-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE20: true
+      EAS_PKG_MANAGER: npm
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -54,8 +58,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 18
-          cache: 'npm'
-          cache-dependency-path: 'mobile/driver-app/package-lock.json'
 
       - name: Setup Java
         uses: actions/setup-java@v3
