@@ -8,7 +8,6 @@ jobs:
     runs-on: ubuntu-latest
     env:
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE20: true
-      EAS_PKG_MANAGER: npm
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -16,7 +15,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 20 # Utilisation d'une version plus stable
 
       - name: Setup Java
         uses: actions/setup-java@v3
@@ -32,7 +31,9 @@ jobs:
 
       - name: Install dependencies
         working-directory: ./mobile/user-app
-        run: npm install
+        run: |
+          rm -f yarn.lock
+          npm install
 
       - name: Build APK (Local)
         working-directory: ./mobile/user-app
@@ -49,7 +50,6 @@ jobs:
     runs-on: ubuntu-latest
     env:
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE20: true
-      EAS_PKG_MANAGER: npm
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -57,7 +57,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 20
 
       - name: Setup Java
         uses: actions/setup-java@v3
@@ -73,7 +73,9 @@ jobs:
 
       - name: Install dependencies
         working-directory: ./mobile/driver-app
-        run: npm install
+        run: |
+          rm -f yarn.lock
+          npm install
 
       - name: Build APK (Local)
         working-directory: ./mobile/driver-app
