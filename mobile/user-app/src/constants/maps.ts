@@ -5,7 +5,7 @@
 // ═══════════════════════════════════════════════════════
 
 // Clé Google Maps (SDK Android/iOS — uniquement pour les tuiles)
-export const GOOGLE_MAPS_KEY = "AIzaSyDEMO_REMPLACEZ_PAR_VOTRE_CLE_GOOGLE"
+export const GOOGLE_MAPS_KEY = "AIzaSyAK3BjGZQy70ogTMi1yr8W8Yw4YeeZ2PK8"
 
 // Clé LocationIQ (directions + géocodage uniquement)
 export const LOCATIONIQ_KEY = "pk.REMPLACEZ_PAR_VOTRE_CLE_LOCATIONIQ"
