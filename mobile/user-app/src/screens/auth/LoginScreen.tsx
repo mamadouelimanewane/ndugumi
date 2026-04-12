@@ -22,8 +22,6 @@ export default function LoginScreen({ navigation }: any) {
     }
     setLoading(true)
     try {
-      // In many systems, the phone number is used for login. 
-      // Adjusting this to send the expected credential. Assuming backend supports this or email field.
       const response = await authAPI.login(phone, password)
       
       const { user, token } = response.data
@@ -31,7 +29,9 @@ export default function LoginScreen({ navigation }: any) {
 
       setUser(user, token)
     } catch (error: any) {
-      Alert.alert("Erreur", error.message || "Une erreur est survenue lors de la connexion.")
+      const status = error.response?.status || "N/A"
+      const message = error.response?.data?.message || error.message
+      Alert.alert("Erreur Connexion", `Status: ${status}\nMessage: ${message}`)
     } finally {
       setLoading(false)
     }

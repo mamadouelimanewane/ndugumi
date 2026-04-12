@@ -1,65 +1,38 @@
 import { NextResponse } from "next/server"
-import { PrismaClient } from "@prisma/client"
-import bcrypt from "bcryptjs"
-import jwt from "jsonwebtoken"
 
-const prisma = new PrismaClient()
-const JWT_SECRET = process.env.NEXTAUTH_SECRET || "ndugumi-secret-key"
-
+// Route ultra-simplifiée pour diagnostic technique
 export async function POST(req: Request) {
   try {
-    const { email, password } = await req.json()
+    const body = await req.json()
+    const { email, password } = body
 
-    // En mode simulation/test, on accepte le compte test par défaut
+    // Données de test en dur (bypass DB)
     if (email === "770000000" && password === "123456") {
       return NextResponse.json({
-        user: {
-          id: "test-user-id",
-          name: "Fatou Diop",
-          phone: "770000000",
-          email: "fatou@ndugumi.com",
-          walletMoney: 50000,
-        },
-        token: "mock-jwt-token",
-      })
+        user: { id: "test", name: "Test User", phone: "770000000", email: "test@ndugumi.com", walletMoney: 1000 },
+        token: "mock-token",
+      }, { headers: { "Access-Control-Allow-Origin": "*" } })
     }
 
-    // Recherche dans la DB
-    const user = await prisma.user.findFirst({
-      where: {
-        OR: [
-          { email: email },
-          { phone: email }
-        ]
-      }
+    return NextResponse.json({ message: "Identifiants invalides (test)" }, { 
+      status: 401,
+      headers: { "Access-Control-Allow-Origin": "*" }
     })
-
-    if (!user) {
-      const res = NextResponse.json({ message: "Utilisateur non trouvé" }, { status: 404 })
-      res.headers.set("Access-Control-Allow-Origin", "*")
-      res.headers.set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
-      res.headers.set("Access-Control-Allow-Headers", "Content-Type, Authorization")
-      return res
-    }
-
-    // Simulation reussie pour le moment
-    const token = jwt.sign({ userId: user.id }, JWT_SECRET)
-
-    const res = NextResponse.json({ user, token })
-    res.headers.set("Access-Control-Allow-Origin", "*")
-    res.headers.set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
-    res.headers.set("Access-Control-Allow-Headers", "Content-Type, Authorization")
-    return res
-  } catch (error) {
-    console.error("Login error:", error)
-    return NextResponse.json({ message: "Erreur serveur" }, { status: 500, headers: { "Access-Control-Allow-Origin": "*" } })
+  } catch (error: any) {
+    return NextResponse.json({ message: "Erreur serveur: " + error.message }, { 
+      status: 500,
+      headers: { "Access-Control-Allow-Origin": "*" }
+    })
   }
 }
 
 export async function OPTIONS() {
-  const res = new NextResponse(null, { status: 204 })
-  res.headers.set("Access-Control-Allow-Origin", "*")
-  res.headers.set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
-  res.headers.set("Access-Control-Allow-Headers", "Content-Type, Authorization")
-  return res
+  return new NextResponse(null, {
+    status: 204,
+    headers: {
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type, Authorization",
+    }
+  })
 }
