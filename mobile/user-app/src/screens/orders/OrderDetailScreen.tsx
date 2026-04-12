@@ -3,9 +3,9 @@ import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
   SafeAreaView, Linking, Dimensions,
 } from "react-native"
-import MapView, { Marker, Polyline, UrlTile, PROVIDER_DEFAULT } from "react-native-maps"
+import MapView, { Marker, Polyline, PROVIDER_GOOGLE } from "react-native-maps"
 import * as Location from "expo-location"
-import { MAP_TILE_URL } from "../../constants/maps"
+import { LOCATIONIQ_DIRECTIONS_URL, decodePolyline } from "../../constants/maps"
 import { COLORS, FONTS, SPACING, RADIUS } from "../../constants/theme"
 
 export default function OrderDetailScreen({ route, navigation }: any) {
@@ -13,6 +13,7 @@ export default function OrderDetailScreen({ route, navigation }: any) {
   const [order, setOrder] = useState(initialOrder)
   const [loading, setLoading] = useState(false)
   const [userCoords, setUserCoords] = useState<{ latitude: number; longitude: number } | null>(null)
+  const [routeCoords, setRouteCoords] = useState<{ latitude: number; longitude: number }[]>([])
 
   React.useEffect(() => {
     let interval: any
@@ -27,7 +28,26 @@ export default function OrderDetailScreen({ route, navigation }: any) {
       const { status } = await Location.requestForegroundPermissionsAsync()
       if (status !== "granted") return
       const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced })
-      setUserCoords({ latitude: loc.coords.latitude, longitude: loc.coords.longitude })
+      const coords = { latitude: loc.coords.latitude, longitude: loc.coords.longitude }
+      setUserCoords(coords)
+
+      // Destination mock (magasin — en production vient de l'objet order)
+      const destLat = loc.coords.latitude + 0.015
+      const destLng = loc.coords.longitude + 0.008
+
+      // Calcul de la route via LocationIQ Directions API
+      try {
+        const url = LOCATIONIQ_DIRECTIONS_URL(loc.coords.latitude, loc.coords.longitude, destLat, destLng)
+        const res = await fetch(url)
+        const data = await res.json()
+        if (data?.routes?.[0]?.geometry) {
+          setRouteCoords(decodePolyline(data.routes[0].geometry))
+        } else {
+          setRouteCoords([coords, { latitude: destLat, longitude: destLng }])
+        }
+      } catch {
+        setRouteCoords([coords, { latitude: destLat, longitude: destLng }])
+      }
     })()
   }, [])
 
@@ -83,8 +103,7 @@ export default function OrderDetailScreen({ route, navigation }: any) {
           <View style={styles.mapContainer}>
             <MapView
               style={styles.map}
-              provider={PROVIDER_DEFAULT}
-              mapType="none"
+              provider={PROVIDER_GOOGLE}
               initialRegion={{
                 latitude: userCoords.latitude,
                 longitude: userCoords.longitude,
@@ -94,31 +113,18 @@ export default function OrderDetailScreen({ route, navigation }: any) {
               showsUserLocation={true}
               showsMyLocationButton={false}
             >
-              {/* Tuiles LocationIQ (OpenStreetMap) — sans Google Maps */}
-              <UrlTile urlTemplate={MAP_TILE_URL} maximumZ={19} flipY={false} />
-              {/* Magasin (mock offset) */}
-              <Marker
-                coordinate={{ latitude: userCoords.latitude + 0.008, longitude: userCoords.longitude - 0.004 }}
-                title="Magasin" description="Point de départ"  pinColor="#f97316"
-              />
-              {/* Livreur (mock on route) */}
-              <Marker
-                coordinate={{ latitude: userCoords.latitude + 0.004, longitude: userCoords.longitude }}
-                title="Livreur" description="En route vers vous"
-              >
+              {/* Magasin */}
+              <Marker coordinate={{ latitude: userCoords.latitude + 0.008, longitude: userCoords.longitude - 0.004 }} title="Magasin" pinColor="#f97316" />
+              {/* Livreur */}
+              <Marker coordinate={{ latitude: userCoords.latitude + 0.004, longitude: userCoords.longitude }} title="Livreur">
                 <View style={styles.driverMarker}><Text style={{fontSize:18}}>🛵</Text></View>
               </Marker>
               {/* Vous */}
               <Marker coordinate={userCoords} title="Vous" pinColor={COLORS.primary} />
-              <Polyline
-                coordinates={[
-                  { latitude: userCoords.latitude + 0.008, longitude: userCoords.longitude - 0.004 },
-                  { latitude: userCoords.latitude + 0.004, longitude: userCoords.longitude },
-                  userCoords,
-                ]}
-                strokeColor={COLORS.primary}
-                strokeWidth={4}
-              />
+              {/* Route calculée via LocationIQ Directions API */}
+              {routeCoords.length > 0 && (
+                <Polyline coordinates={routeCoords} strokeColor={COLORS.primary} strokeWidth={4} lineDashPattern={[0]} />
+              )}
             </MapView>
             <View style={styles.etaBadge}>
               <Text style={styles.etaBadgeText}>🕒 Arrivée estimée : <Text style={{fontWeight:"800"}}>12 min</Text></Text>

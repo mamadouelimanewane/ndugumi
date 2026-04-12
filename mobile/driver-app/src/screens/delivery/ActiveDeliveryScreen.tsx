@@ -1,17 +1,10 @@
 import React, { useState, useEffect } from "react"
 import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  Alert,
-  ScrollView,
-  Linking,
-  Dimensions
+  View, Text, StyleSheet, TouchableOpacity, Alert, ScrollView, Linking, Dimensions
 } from "react-native"
 import * as Location from "expo-location"
-import MapView, { Marker, Polyline, UrlTile, PROVIDER_DEFAULT } from "react-native-maps"
-import { MAP_TILE_URL } from "../../constants/maps"
+import MapView, { Marker, Polyline, PROVIDER_GOOGLE } from "react-native-maps"
+import { LOCATIONIQ_DIRECTIONS_URL, decodePolyline } from "../../constants/maps"
 import { useDriverStore } from "../../store/useDriverStore"
 
 const STEPS = [
@@ -30,6 +23,7 @@ export default function ActiveDeliveryScreen({ navigation }: any) {
   }
 
   const [location, setLocation] = useState<Location.LocationObject | null>(null)
+  const [routeCoords, setRouteCoords] = useState<{ latitude: number; longitude: number }[]>([])
 
   useEffect(() => {
     (async () => {
@@ -38,10 +32,37 @@ export default function ActiveDeliveryScreen({ navigation }: any) {
         Alert.alert("Permission GPS refusée", "Veuillez autoriser la géolocalisation pour un suivi optimal.")
         return
       }
-      const loc = await Location.getCurrentPositionAsync({
-        accuracy: Location.Accuracy.Balanced,
-      })
+      const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced })
       setLocation(loc)
+
+      // Coordonnées mock du magasin et client (en production: viennent de la commande)
+      const storeLat = loc.coords.latitude + 0.01
+      const storeLng = loc.coords.longitude - 0.005
+      const clientLat = loc.coords.latitude + 0.02
+      const clientLng = loc.coords.longitude + 0.01
+
+      // Calcul du trajet via LocationIQ Directions API
+      try {
+        const url = LOCATIONIQ_DIRECTIONS_URL(loc.coords.latitude, loc.coords.longitude, clientLat, clientLng)
+        const res = await fetch(url)
+        const data = await res.json()
+        if (data?.routes?.[0]?.geometry) {
+          setRouteCoords(decodePolyline(data.routes[0].geometry))
+        } else {
+          // Fallback si API indisponible
+          setRouteCoords([
+            { latitude: loc.coords.latitude, longitude: loc.coords.longitude },
+            { latitude: storeLat, longitude: storeLng },
+            { latitude: clientLat, longitude: clientLng },
+          ])
+        }
+      } catch {
+        setRouteCoords([
+          { latitude: loc.coords.latitude, longitude: loc.coords.longitude },
+          { latitude: storeLat, longitude: storeLng },
+          { latitude: clientLat, longitude: clientLng },
+        ])
+      }
     })()
   }, [])
 
@@ -95,8 +116,7 @@ export default function ActiveDeliveryScreen({ navigation }: any) {
         {location ? (
           <MapView
             style={styles.mapActual}
-            provider={PROVIDER_DEFAULT}
-            mapType="none"
+            provider={PROVIDER_GOOGLE}
             initialRegion={{
               latitude: location.coords.latitude,
               longitude: location.coords.longitude,
@@ -106,17 +126,14 @@ export default function ActiveDeliveryScreen({ navigation }: any) {
             showsUserLocation={true}
             showsMyLocationButton={true}
           >
-            {/* Tuiles LocationIQ (OpenStreetMap) — zéro dependance Google */}
-            <UrlTile urlTemplate={MAP_TILE_URL} maximumZ={19} flipY={false} />
             {/* Magasin */}
             <Marker coordinate={{ latitude: location.coords.latitude + 0.01, longitude: location.coords.longitude - 0.005 }} title="Magasin (Point Collecte)" pinColor="orange" />
             {/* Client */}
             <Marker coordinate={{ latitude: location.coords.latitude + 0.02, longitude: location.coords.longitude + 0.01 }} title="Client (Destination)" pinColor="green" />
-            <Polyline coordinates={[
-              { latitude: location.coords.latitude, longitude: location.coords.longitude },
-              { latitude: location.coords.latitude + 0.01, longitude: location.coords.longitude - 0.005 },
-              { latitude: location.coords.latitude + 0.02, longitude: location.coords.longitude + 0.01 }
-            ]} strokeColor="#6B6BD5" strokeWidth={5} />
+            {/* Route calculée via LocationIQ Directions API */}
+            {routeCoords.length > 0 && (
+              <Polyline coordinates={routeCoords} strokeColor="#6B6BD5" strokeWidth={5} lineDashPattern={[0]} />
+            )}
           </MapView>
         ) : (
           <View style={styles.mapLoading}>

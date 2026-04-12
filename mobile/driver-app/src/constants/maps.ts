@@ -1,19 +1,36 @@
 // ═══════════════════════════════════════════════════════
-// Configuration Cartographie — LocationIQ
-// ═══════════════════════════════════════════════════════
-// Obtenez votre clé gratuite sur : https://locationiq.com/
-// Plan gratuit = 5 000 requêtes/jour (tiles + geocoding)
+// Configuration Cartographie
+// Google Maps → tuiles visuelles (render natif, tarif gratuit)
+// LocationIQ  → API de directions/routage (évite $ Google Directions)
 // ═══════════════════════════════════════════════════════
 
+// Clé Google Maps (SDK Android/iOS — uniquement pour les tuiles)
+export const GOOGLE_MAPS_KEY = "AIzaSyDEMO_REMPLACEZ_PAR_VOTRE_CLE_GOOGLE"
+
+// Clé LocationIQ (directions + géocodage uniquement)
 export const LOCATIONIQ_KEY = "pk.REMPLACEZ_PAR_VOTRE_CLE_LOCATIONIQ"
 
-// Tuiles de carte (OpenStreetMap via LocationIQ)
-export const MAP_TILE_URL = `https://a-tiles.locationiq.com/v3/streets/r/{z}/{x}/{y}.png?key=${LOCATIONIQ_KEY}`
+// API Directions LocationIQ (OSRM-based, pas Google Directions)
+// Format : lat/lng ORIGINE → DESTINATION
+export const LOCATIONIQ_DIRECTIONS_URL = (originLat: number, originLng: number, destLat: number, destLng: number) =>
+  `https://us1.locationiq.com/v1/directions/driving/${originLng},${originLat};${destLng},${destLat}?key=${LOCATIONIQ_KEY}&steps=false&geometries=polyline&overview=full`
 
-// API de géocodage inverse (coordonnées → adresse)
-export const GEOCODE_REVERSE_URL = (lat: number, lon: number) =>
+// API Géocodage inverse LocationIQ (coordonnées → adresse)
+export const LOCATIONIQ_REVERSE_URL = (lat: number, lon: number) =>
   `https://us1.locationiq.com/v1/reverse?key=${LOCATIONIQ_KEY}&lat=${lat}&lon=${lon}&format=json`
 
-// API de recherche d'adresse (texte → coordonnées)
-export const GEOCODE_SEARCH_URL = (query: string) =>
-  `https://us1.locationiq.com/v1/search?key=${LOCATIONIQ_KEY}&q=${encodeURIComponent(query)}&format=json&limit=5&countrycodes=sn`
+// Décodage de Polyline encodée (format Google/OSRM)
+export function decodePolyline(encoded: string): { latitude: number; longitude: number }[] {
+  const coords: { latitude: number; longitude: number }[] = []
+  let index = 0, lat = 0, lng = 0
+  while (index < encoded.length) {
+    let shift = 0, result = 0, b: number
+    do { b = encoded.charCodeAt(index++) - 63; result |= (b & 0x1f) << shift; shift += 5 } while (b >= 0x20)
+    lat += result & 1 ? ~(result >> 1) : result >> 1
+    shift = 0; result = 0
+    do { b = encoded.charCodeAt(index++) - 63; result |= (b & 0x1f) << shift; shift += 5 } while (b >= 0x20)
+    lng += result & 1 ? ~(result >> 1) : result >> 1
+    coords.push({ latitude: lat / 1e5, longitude: lng / 1e5 })
+  }
+  return coords
+}
