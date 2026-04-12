@@ -1,4 +1,4 @@
-import React, { useState } from "react"
+import React, { useState, useEffect } from "react"
 import {
   View,
   Text,
@@ -7,7 +7,10 @@ import {
   Alert,
   ScrollView,
   Linking,
+  Dimensions
 } from "react-native"
+import * as Location from "expo-location"
+import MapView, { Marker, Polyline } from "react-native-maps"
 import { useDriverStore } from "../../store/useDriverStore"
 
 const STEPS = [
@@ -24,6 +27,22 @@ export default function ActiveDeliveryScreen({ navigation }: any) {
     navigation.goBack()
     return null
   }
+
+  const [location, setLocation] = useState<Location.LocationObject | null>(null)
+
+  useEffect(() => {
+    (async () => {
+      const { status } = await Location.requestForegroundPermissionsAsync()
+      if (status !== 'granted') {
+        Alert.alert("Permission GPS refusée", "Veuillez autoriser la géolocalisation pour un suivi optimal.")
+        return
+      }
+      const loc = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.Balanced,
+      })
+      setLocation(loc)
+    })()
+  }, [])
 
   const handleNextStep = async () => {
     try {
@@ -70,11 +89,38 @@ export default function ActiveDeliveryScreen({ navigation }: any) {
 
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-      {/* Map placeholder */}
+      {/* Map View Actuelle */}
       <View style={styles.mapPlaceholder}>
-        <Text style={styles.mapIcon}>🗺️</Text>
-        <Text style={styles.mapText}>Carte GPS</Text>
-        <Text style={styles.mapSub}>Intégration Google Maps / Mapbox</Text>
+        {location ? (
+          <MapView
+            style={styles.mapActual}
+            initialRegion={{
+              latitude: location.coords.latitude,
+              longitude: location.coords.longitude,
+              latitudeDelta: 0.04,
+              longitudeDelta: 0.04,
+            }}
+            showsUserLocation={true}
+            showsMyLocationButton={true}
+          >
+            {/* Magasin */}
+            <Marker coordinate={{ latitude: location.coords.latitude + 0.01, longitude: location.coords.longitude - 0.005 }} title="Magasin (Point Collecte)" pinColor="orange" />
+            
+            {/* Client (MOCK Coordinates pour le design) */}
+            <Marker coordinate={{ latitude: location.coords.latitude + 0.02, longitude: location.coords.longitude + 0.01 }} title="Client (Destination)" pinColor="green" />
+            
+            <Polyline coordinates={[
+              { latitude: location.coords.latitude, longitude: location.coords.longitude },
+              { latitude: location.coords.latitude + 0.01, longitude: location.coords.longitude - 0.005 },
+              { latitude: location.coords.latitude + 0.02, longitude: location.coords.longitude + 0.01 }
+            ]} strokeColor="#6B6BD5" strokeWidth={5} />
+          </MapView>
+        ) : (
+          <View style={styles.mapLoading}>
+             <Text style={styles.mapIcon}>🛰️</Text>
+             <Text style={styles.mapText}>Recherche du signal GPS...</Text>
+          </View>
+        )}
       </View>
 
       {/* Progress */}
@@ -171,14 +217,21 @@ export default function ActiveDeliveryScreen({ navigation }: any) {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#F5F5FA" },
   mapPlaceholder: {
-    height: 200,
+    height: Dimensions.get("window").height * 0.35,
     backgroundColor: "#E8EAF6",
+    overflow: "hidden",
+  },
+  mapActual: {
+    width: "100%",
+    height: "100%",
+  },
+  mapLoading: {
+    flex: 1,
     alignItems: "center",
     justifyContent: "center",
   },
-  mapIcon: { fontSize: 48 },
-  mapText: { fontSize: 16, fontWeight: "600", color: "#555", marginTop: 8 },
-  mapSub: { fontSize: 12, color: "#888", marginTop: 4 },
+  mapIcon: { fontSize: 40 },
+  mapText: { fontSize: 14, fontWeight: "600", color: "#666", marginTop: 8 },
   progressContainer: {
     flexDirection: "row",
     alignItems: "center",

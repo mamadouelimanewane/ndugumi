@@ -22,12 +22,23 @@
         "NSPhotoLibraryUsageDescription": "NDUGUMi Driver accède à vos photos pour les documents."
       }
     },
+      "config": {
+        "googleMaps": {
+          "apiKey": "AIzaSyDEMO_KEY_REPLACE_WITH_REAL_KEY"
+        }
+      }
+    },
     "android": {
       "package": "com.ndugumi.driverapp",
       "versionCode": 2,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#6366F1"
+      },
+      "config": {
+        "googleMaps": {
+          "apiKey": "AIzaSyDEMO_KEY_REPLACE_WITH_REAL_KEY"
+        }
       },
       "permissions": [
         "ACCESS_FINE_LOCATION",
@@ -65,6 +76,7 @@
           "isAndroidBackgroundLocationEnabled": true
         }
       ],
+      "react-native-maps",
       [
         "expo-notifications",
         {

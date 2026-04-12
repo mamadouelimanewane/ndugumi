@@ -29,6 +29,11 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#10B981"
       },
+      "config": {
+        "googleMaps": {
+          "apiKey": "AIzaSyDEMO_KEY_REPLACE_WITH_REAL_KEY"
+        }
+      },
       "permissions": [
         "ACCESS_FINE_LOCATION",
         "ACCESS_COARSE_LOCATION",
@@ -58,6 +63,7 @@
           "locationAlwaysAndWhenInUsePermission": "NDUGUMi utilise votre localisation pour les livraisons."
         }
       ],
+      "react-native-maps",
       [
         "expo-notifications",
         {

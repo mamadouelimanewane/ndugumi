@@ -1,14 +1,17 @@
-import React, { useState } from "react"
+import React, { useState, useEffect, useRef } from "react"
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
-  SafeAreaView, Linking,
+  SafeAreaView, Linking, Dimensions,
 } from "react-native"
+import MapView, { Marker, Polyline, AnimatedRegion, Camera } from "react-native-maps"
+import * as Location from "expo-location"
 import { COLORS, FONTS, SPACING, RADIUS } from "../../constants/theme"
 
 export default function OrderDetailScreen({ route, navigation }: any) {
   const { order: initialOrder } = route.params
   const [order, setOrder] = useState(initialOrder)
   const [loading, setLoading] = useState(false)
+  const [userCoords, setUserCoords] = useState<{ latitude: number; longitude: number } | null>(null)
 
   React.useEffect(() => {
     let interval: any
@@ -17,6 +20,15 @@ export default function OrderDetailScreen({ route, navigation }: any) {
     }
     return () => clearInterval(interval)
   }, [order?.status])
+
+  useEffect(() => {
+    (async () => {
+      const { status } = await Location.requestForegroundPermissionsAsync()
+      if (status !== "granted") return
+      const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced })
+      setUserCoords({ latitude: loc.coords.latitude, longitude: loc.coords.longitude })
+    })()
+  }, [])
 
   const fetchOrderUpdate = async () => {
     try {
@@ -65,10 +77,59 @@ export default function OrderDetailScreen({ route, navigation }: any) {
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false}>
-        {/* Suivi en temps réel */}
+        {/* Carte de suivi GPS (MapView) */}
+        {userCoords ? (
+          <View style={styles.mapContainer}>
+            <MapView
+              style={styles.map}
+              initialRegion={{
+                latitude: userCoords.latitude,
+                longitude: userCoords.longitude,
+                latitudeDelta: 0.03,
+                longitudeDelta: 0.03,
+              }}
+              showsUserLocation={true}
+              showsMyLocationButton={false}
+            >
+              {/* Magasin (mock offset) */}
+              <Marker
+                coordinate={{ latitude: userCoords.latitude + 0.008, longitude: userCoords.longitude - 0.004 }}
+                title="Magasin" description="Point de départ"  pinColor="#f97316"
+              />
+              {/* Livreur (mock on route) */}
+              <Marker
+                coordinate={{ latitude: userCoords.latitude + 0.004, longitude: userCoords.longitude }}
+                title="Livreur" description="En route vers vous"
+              >
+                <View style={styles.driverMarker}><Text style={{fontSize:18}}>🛵</Text></View>
+              </Marker>
+              {/* Vous */}
+              <Marker coordinate={userCoords} title="Vous" pinColor={COLORS.primary} />
+              <Polyline
+                coordinates={[
+                  { latitude: userCoords.latitude + 0.008, longitude: userCoords.longitude - 0.004 },
+                  { latitude: userCoords.latitude + 0.004, longitude: userCoords.longitude },
+                  userCoords,
+                ]}
+                strokeColor={COLORS.primary}
+                strokeWidth={4}
+              />
+            </MapView>
+            <View style={styles.etaBadge}>
+              <Text style={styles.etaBadgeText}>🕒 Arrivée estimée : <Text style={{fontWeight:"800"}}>12 min</Text></Text>
+            </View>
+          </View>
+        ) : (
+          <View style={[styles.trackingCard, {alignItems:"center", justifyContent:"center", minHeight:120}]}>
+            <Text style={{fontSize:32}}>🛠️</Text>
+            <Text style={[styles.cardTitle, {marginTop:8}]}>Localisation en cours...</Text>
+            <Text style={{fontSize:FONTS.sizes.sm, color:COLORS.textSecondary}}>GPS requis pour voir la carte en direct</Text>
+          </View>
+        )}
+
+        {/* Suivi en temps réel - Étapes */}
         <View style={styles.trackingCard}>
-          <Text style={styles.cardTitle}>🛵 Suivi en temps réel</Text>
-          <Text style={styles.eta}>Arrivée estimée : <Text style={styles.etaTime}>15 min</Text></Text>
+          <Text style={styles.cardTitle}>🛥 Suivi en temps réel</Text>
           <View style={styles.steps}>
             {STEPS.map((step, idx) => (
               <View key={step.id} style={styles.stepRow}>
@@ -167,6 +228,24 @@ const styles = StyleSheet.create({
   title: { flex: 1, fontSize: FONTS.sizes.md, fontWeight: "800", color: COLORS.text },
   statusBadge: { backgroundColor: "#FFF3E0", borderRadius: RADIUS.round, paddingHorizontal: SPACING.sm, paddingVertical: 4 },
   statusText: { color: "#E65100", fontSize: FONTS.sizes.xs, fontWeight: "700" },
+  mapContainer: {
+    margin: SPACING.md, marginBottom: 0, borderRadius: RADIUS.lg, overflow: "hidden",
+    height: Dimensions.get("window").width * 0.6,
+    shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.08, shadowRadius: 6, elevation: 3,
+    position: "relative",
+  },
+  map: { width: "100%", height: "100%" },
+  driverMarker: {
+    backgroundColor: COLORS.white, borderRadius: 20, padding: 4,
+    shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.15, shadowRadius: 4, elevation: 4,
+  },
+  etaBadge: {
+    position: "absolute", bottom: 12, left: 12, right: 12,
+    backgroundColor: "rgba(255,255,255,0.94)", borderRadius: RADIUS.md,
+    paddingVertical: 8, paddingHorizontal: 12,
+    shadowColor: "#000", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.08, shadowRadius: 4, elevation: 3,
+  },
+  etaBadgeText: { fontSize: FONTS.sizes.sm, color: COLORS.text, textAlign: "center" },
   card: {
     backgroundColor: COLORS.white, margin: SPACING.md, marginBottom: 0,
     borderRadius: RADIUS.lg, padding: SPACING.lg,
