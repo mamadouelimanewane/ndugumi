@@ -1,29 +1,27 @@
 export const COLORS = {
-  primary: "#6B6BD5",       // Violet NDUGUMi admin
-  primaryLight: "#8E8EDF",
-  primaryDark: "#4A4AB0",
-  secondary: "#FF6F00",
-  accent: "#00ACC1",
-  background: "#F5F5F5",
+  primary: "#6366F1",       // Indigo moderne
+  primaryLight: "#E0E7FF",
+  primaryDark: "#4338CA",
+  secondary: "#10B981",     // Emeraude pour le statut "En ligne"
+  background: "#F8FAFC",
   white: "#FFFFFF",
-  black: "#1A1A1A",
-  gray: "#9E9E9E",
-  grayLight: "#F0F0F0",
-  grayMedium: "#E0E0E0",
-  danger: "#F44336",
-  success: "#4CAF50",
-  warning: "#FF9800",
-  info: "#2196F3",
-  text: "#212121",
-  textSecondary: "#757575",
-  border: "#E0E0E0",
-  online: "#4CAF50",
-  offline: "#9E9E9E",
+  black: "#0F172A",
+  gray: "#94A3B8",
+  grayLight: "#F1F5F9",
+  grayMedium: "#E2E8F0",
+  danger: "#EF4444",
+  success: "#10B981",
+  warning: "#F59E0B",
+  info: "#3B82F6",
+  text: "#1E293B",
+  textSecondary: "#64748B",
+  border: "#E2E8F0",
 }
 
-export const FONTS = {
-  sizes: { xs: 11, sm: 13, md: 15, lg: 17, xl: 20, xxl: 24, xxxl: 30 },
+export const RADIUS = {
+  sm: 8,
+  md: 14,
+  lg: 20,
+  xl: 28,
+  round: 9999,
 }
-
-export const SPACING = { xs: 4, sm: 8, md: 16, lg: 24, xl: 32, xxl: 48 }
-export const RADIUS = { sm: 6, md: 12, lg: 18, xl: 24, round: 9999 }

@@ -4,6 +4,7 @@ import {
 } from "react-native"
 import { COLORS, FONTS, SPACING, RADIUS } from "../../constants/theme"
 import { useStore } from "../../store/useStore"
+import { ordersAPI } from "../../services/api"
 
 export default function CartScreen({ navigation }: any) {
   const cart = useStore((s) => s.cart)
@@ -16,16 +17,63 @@ export default function CartScreen({ navigation }: any) {
   const FREE_DELIVERY_THRESHOLD = 10000
   const deliveryFee = cartTotal >= FREE_DELIVERY_THRESHOLD ? 0 : DELIVERY_FEE
 
-  function handleCheckout() {
+  const [paymentMethod, setPaymentMethod] = React.useState<"CASH_ON_DELIVERY" | "WALLET">("CASH_ON_DELIVERY")
+  const [balance, setBalance] = React.useState<number>(0)
+  const [loadingBalance, setLoadingBalance] = React.useState(false)
+
+  React.useEffect(() => {
+    fetchBalance()
+  }, [])
+
+  async function fetchBalance() {
+    try {
+      setLoadingBalance(true)
+      const res = await walletAPI.getBalance()
+      setBalance(res.data.balance)
+    } catch (e) {
+      console.log("Error fetching balance", e)
+    } finally {
+      setLoadingBalance(false)
+    }
+  }
+
+  async function handleCheckout() {
+    const total = cartTotal + deliveryFee
+
+    if (paymentMethod === "WALLET" && balance < total) {
+      Alert.alert("Solde insuffisant", "Votre solde portefeuille est insuffisant pour cette commande. Veuillez recharger ou choisir le paiement à la livraison.")
+      return
+    }
+
     Alert.alert(
       "Confirmer la commande",
-      `Total : ${(cartTotal + deliveryFee).toLocaleString()} FCFA`,
+      `Total : ${total.toLocaleString()} FCFA\nMode : ${paymentMethod === "WALLET" ? "Portefeuille" : "Espèces"}`,
       [
         { text: "Annuler", style: "cancel" },
-        { text: "Commander", onPress: () => {
-          clearCart()
-          navigation.navigate("Orders")
-        }},
+        {
+          text: "Commander",
+          onPress: async () => {
+            try {
+              const orderData = {
+                merchantId: cart[0].storeId,
+                items: cart.map(item => ({
+                  productId: item.id,
+                  quantity: item.quantity,
+                  price: item.price
+                })),
+                total: total,
+                deliveryFee: deliveryFee,
+                paymentMethod: paymentMethod
+              }
+
+              await ordersAPI.create(orderData)
+              clearCart()
+              navigation.navigate("Orders")
+            } catch (e: any) {
+              Alert.alert("Erreur", "Impossible de créer la commande. " + e.message)
+            }
+          }
+        },
       ]
     )
   }
@@ -94,9 +142,28 @@ export default function CartScreen({ navigation }: any) {
         )}
       />
 
-      {/* Order Summary */}
+      {/* Order Summary & Payment */}
       <View style={styles.summary}>
-        <Text style={styles.summaryTitle}>Récapitulatif</Text>
+        <Text style={styles.summaryTitle}>Mode de paiement</Text>
+        <View style={styles.paymentMethods}>
+          <TouchableOpacity
+            style={[styles.methodBtn, paymentMethod === "CASH_ON_DELIVERY" && styles.methodBtnActive]}
+            onPress={() => setPaymentMethod("CASH_ON_DELIVERY")}
+          >
+            <Text style={[styles.methodText, paymentMethod === "CASH_ON_DELIVERY" && styles.methodTextActive]}>💵 Espèces</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.methodBtn, paymentMethod === "WALLET" && styles.methodBtnActive]}
+            onPress={() => setPaymentMethod("WALLET")}
+          >
+            <View>
+              <Text style={[styles.methodText, paymentMethod === "WALLET" && styles.methodTextActive]}>💳 Wallet</Text>
+              <Text style={styles.balanceText}>{balance.toLocaleString()} FCFA</Text>
+            </View>
+          </TouchableOpacity>
+        </View>
+
+        <Text style={[styles.summaryTitle, { marginTop: SPACING.md }]}>Récapitulatif</Text>
         <View style={styles.summaryRow}>
           <Text style={styles.summaryLabel}>Sous-total</Text>
           <Text style={styles.summaryValue}>{cartTotal.toLocaleString()} FCFA</Text>
@@ -107,11 +174,6 @@ export default function CartScreen({ navigation }: any) {
             {deliveryFee === 0 ? "Gratuit 🎉" : `${deliveryFee.toLocaleString()} FCFA`}
           </Text>
         </View>
-        {cartTotal < FREE_DELIVERY_THRESHOLD && (
-          <Text style={styles.freeDeliveryHint}>
-            +{(FREE_DELIVERY_THRESHOLD - cartTotal).toLocaleString()} FCFA pour la livraison gratuite
-          </Text>
-        )}
         <View style={[styles.summaryRow, styles.totalRow]}>
           <Text style={styles.totalLabel}>Total</Text>
           <Text style={styles.totalValue}>{(cartTotal + deliveryFee).toLocaleString()} FCFA</Text>
@@ -121,6 +183,7 @@ export default function CartScreen({ navigation }: any) {
         </TouchableOpacity>
       </View>
     </View>
+
   )
 }
 
@@ -172,4 +235,13 @@ const styles = StyleSheet.create({
     shadowColor: COLORS.primary, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.35, shadowRadius: 8, elevation: 6,
   },
   checkoutText: { color: COLORS.white, fontSize: FONTS.sizes.lg, fontWeight: "700" },
+  paymentMethods: { flexDirection: "row", gap: SPACING.md, marginTop: SPACING.xs },
+  methodBtn: {
+    flex: 1, padding: SPACING.md, borderRadius: RADIUS.md, borderWidth: 1, borderColor: COLORS.border,
+    alignItems: "center", justifyContent: "center", backgroundColor: COLORS.white,
+  },
+  methodBtnActive: { borderColor: COLORS.primary, backgroundColor: COLORS.primaryLight + "10" },
+  methodText: { fontSize: FONTS.sizes.sm, fontWeight: "600", color: COLORS.textSecondary },
+  methodTextActive: { color: COLORS.primary },
+  balanceText: { fontSize: 10, color: COLORS.textSecondary, textAlign: "center", marginTop: 2 },
 })

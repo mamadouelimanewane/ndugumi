@@ -1,10 +1,12 @@
 import React, { useState } from "react"
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,
-  ScrollView, KeyboardAvoidingView, Platform, Alert, ActivityIndicator,
+  Alert, KeyboardAvoidingView, ScrollView, Platform, ActivityIndicator
 } from "react-native"
 import { COLORS, FONTS, SPACING, RADIUS } from "../../constants/theme"
 import { useStore } from "../../store/useStore"
+import { authAPI } from "../../services/api"
+import * as SecureStore from 'expo-secure-store'
 
 export default function LoginScreen({ navigation }: any) {
   const [phone, setPhone] = useState("")
@@ -19,11 +21,20 @@ export default function LoginScreen({ navigation }: any) {
       return
     }
     setLoading(true)
-    // Mock login — replace with real API call
-    setTimeout(() => {
+    try {
+      // In many systems, the phone number is used for login. 
+      // Adjusting this to send the expected credential. Assuming backend supports this or email field.
+      const response = await authAPI.login(phone, password)
+      
+      const { user, token } = response.data
+      await SecureStore.setItemAsync("user_token", token)
+
+      setUser(user, token)
+    } catch (error: any) {
+      Alert.alert("Erreur", error.message || "Une erreur est survenue lors de la connexion.")
+    } finally {
       setLoading(false)
-      setUser({ id: "1", name: "Fatou Diallo", email: "fatou@gmail.com", phone }, "mock_token")
-    }, 1200)
+    }
   }
 
   return (
@@ -73,7 +84,7 @@ export default function LoginScreen({ navigation }: any) {
             </View>
           </View>
 
-          <TouchableOpacity style={styles.forgotBtn}>
+          <TouchableOpacity style={styles.forgotBtn} onPress={() => Alert.alert("Mot de passe oublié", "La fonctionnalité de récupération de mot de passe sera bientôt disponible.")}>
             <Text style={styles.forgotText}>Mot de passe oublié ?</Text>
           </TouchableOpacity>
 
@@ -95,7 +106,7 @@ export default function LoginScreen({ navigation }: any) {
             <View style={styles.dividerLine} />
           </View>
 
-          <TouchableOpacity style={styles.phoneOtpBtn}>
+          <TouchableOpacity style={styles.phoneOtpBtn} onPress={() => Alert.alert("OTP", "Connexion par SMS OTP bientôt disponible.")}>
             <Text style={styles.phoneOtpText}>📱 Connexion par SMS OTP</Text>
           </TouchableOpacity>
         </View>

@@ -9,12 +9,12 @@
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#2E7D32"
+      "backgroundColor": "#10B981"
     },
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.ndugumi.userapp",
-      "buildNumber": "1",
+      "buildNumber": "2",
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "NDUGUMi utilise votre localisation pour trouver les magasins proches.",
         "NSLocationAlwaysUsageDescription": "NDUGUMi utilise votre localisation pour le suivi des livraisons.",
@@ -24,10 +24,10 @@
     },
     "android": {
       "package": "com.ndugumi.userapp",
-      "versionCode": 1,
+      "versionCode": 2,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#2E7D32"
+        "backgroundColor": "#10B981"
       },
       "permissions": [
         "ACCESS_FINE_LOCATION",

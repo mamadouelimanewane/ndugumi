@@ -5,33 +5,52 @@ import {
 } from "react-native"
 import { COLORS, FONTS, SPACING, RADIUS } from "../../constants/theme"
 
-const STEPS = [
-  { id: 1, label: "Commande confirmée", icon: "✅", done: true },
-  { id: 2, label: "En préparation", icon: "👨‍🍳", done: true },
-  { id: 3, label: "Livreur assigné", icon: "🛵", done: true },
-  { id: 4, label: "En route vers vous", icon: "📍", done: false, active: true },
-  { id: 5, label: "Livré", icon: "🏠", done: false },
-]
-
 export default function OrderDetailScreen({ route, navigation }: any) {
-  const order = route?.params?.order ?? {
-    id: "ORD-1234",
-    store: "Marché Keur Massar",
-    date: "15 Mars 2026, 10:35",
-    status: "delivering",
-    total: 12500,
-    deliveryFee: 500,
-    address: "Cité Fadia, Appartement B4, Dakar",
-    driver: { name: "Mamadou Lamine Diallo", phone: "+221 77 000 00 01", rating: 4.9, vehicle: "Moto — DK 1234 AB" },
-    items: [
-      { name: "Légumes assortis", qty: 2, price: 2500 },
-      { name: "Poulet entier 1kg", qty: 1, price: 5000 },
-      { name: "Oignons 1kg", qty: 2, price: 1000 },
-      { name: "Huile de palme 1L", qty: 1, price: 1500 },
-    ],
+  const { order: initialOrder } = route.params
+  const [order, setOrder] = useState(initialOrder)
+  const [loading, setLoading] = useState(false)
+
+  React.useEffect(() => {
+    let interval: any
+    if (order && order.status !== "DELIVERED" && order.status !== "CANCELLED") {
+      interval = setInterval(fetchOrderUpdate, 10000) // Poll every 10s
+    }
+    return () => clearInterval(interval)
+  }, [order?.status])
+
+  const fetchOrderUpdate = async () => {
+    try {
+      const { ordersAPI } = await import("../../services/api")
+      const res = await ordersAPI.getById(order.id || order._id)
+      setOrder(res.data)
+    } catch (e) {
+      console.log("Error polling order", e)
+    }
   }
 
-  const subtotal = order.items.reduce((sum: number, i: any) => sum + i.price * i.qty, 0)
+  const getStepStatus = (status: string) => {
+    const steps = [
+      { id: 1, label: "Commande confirmée", icon: "✅", done: true },
+      { id: 2, label: "En préparation", icon: "👨‍🍳", done: ["PREPARING", "READY", "PICKED_UP", "DELIVERED"].includes(status) },
+      { id: 3, label: "Livreur assigné", icon: "🛵", done: ["PICKED_UP", "DELIVERED"].includes(status), active: ["ASSIGNED", "ACCEPTED"].includes(status) },
+      { id: 4, label: "En route vers vous", icon: "📍", done: status === "DELIVERED", active: status === "PICKED_UP" },
+      { id: 5, label: "Livré", icon: "🏠", done: status === "DELIVERED", active: status === "DELIVERED" },
+    ]
+    return steps
+  }
+
+  const STEPS = getStepStatus(order?.status || "PENDING")
+  
+  if (!order) {
+    return (
+      <View style={styles.center}>
+        <Text>Commande introuvable</Text>
+      </View>
+    )
+  }
+
+  const items = order.items || []
+  const subtotal = items.reduce((sum: number, i: any) => sum + (i.price * (i.quantity || i.qty || 0)), 0)
 
   return (
     <SafeAreaView style={styles.container}>
@@ -39,9 +58,9 @@ export default function OrderDetailScreen({ route, navigation }: any) {
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
           <Text style={styles.backIcon}>←</Text>
         </TouchableOpacity>
-        <Text style={styles.title}>Commande {order.id}</Text>
+        <Text style={styles.title}>Commande {order.id || order._id}</Text>
         <View style={styles.statusBadge}>
-          <Text style={styles.statusText}>En route</Text>
+          <Text style={styles.statusText}>{order.status}</Text>
         </View>
       </View>
 
@@ -68,40 +87,47 @@ export default function OrderDetailScreen({ route, navigation }: any) {
         </View>
 
         {/* Livreur */}
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>Votre livreur</Text>
-          <View style={styles.driverRow}>
-            <View style={styles.driverAvatar}>
-              <Text style={{ fontSize: 28 }}>🛵</Text>
+        {order.driver ? (
+          <View style={styles.card}>
+            <Text style={styles.cardTitle}>Votre livreur</Text>
+            <View style={styles.driverRow}>
+              <View style={styles.driverAvatar}>
+                <Text style={{ fontSize: 28 }}>🛵</Text>
+              </View>
+              <View style={styles.driverInfo}>
+                <Text style={styles.driverName}>{order.driver.name}</Text>
+                <Text style={styles.driverVehicle}>{order.driver.vehicle}</Text>
+                <Text style={styles.driverRating}>⭐ {order.driver.rating}</Text>
+              </View>
+              <TouchableOpacity style={styles.callBtn} onPress={() => Linking.openURL(`tel:${order.driver.phone}`)}>
+                <Text style={{ fontSize: 22 }}>📞</Text>
+              </TouchableOpacity>
             </View>
-            <View style={styles.driverInfo}>
-              <Text style={styles.driverName}>{order.driver.name}</Text>
-              <Text style={styles.driverVehicle}>{order.driver.vehicle}</Text>
-              <Text style={styles.driverRating}>⭐ {order.driver.rating}</Text>
-            </View>
-            <TouchableOpacity style={styles.callBtn} onPress={() => Linking.openURL(`tel:${order.driver.phone}`)}>
-              <Text style={{ fontSize: 22 }}>📞</Text>
-            </TouchableOpacity>
           </View>
-        </View>
+        ) : (
+          <View style={styles.card}>
+            <Text style={styles.cardTitle}>Livreur</Text>
+            <Text style={styles.addressText}>Recherche d'un livreur...</Text>
+          </View>
+        )}
 
         {/* Adresse */}
         <View style={styles.card}>
           <Text style={styles.cardTitle}>Adresse de livraison</Text>
           <View style={styles.addressRow}>
             <Text style={{ fontSize: 20 }}>📍</Text>
-            <Text style={styles.addressText}>{order.address}</Text>
+            <Text style={styles.addressText}>{order.address || "Dakar, Sénégal"}</Text>
           </View>
         </View>
 
         {/* Articles */}
         <View style={styles.card}>
           <Text style={styles.cardTitle}>Articles commandés</Text>
-          {order.items.map((item: any, idx: number) => (
+          {items.map((item: any, idx: number) => (
             <View key={idx} style={styles.itemRow}>
-              <Text style={styles.itemQty}>{item.qty}x</Text>
-              <Text style={styles.itemName}>{item.name}</Text>
-              <Text style={styles.itemPrice}>{(item.price * item.qty).toLocaleString()} FCFA</Text>
+              <Text style={styles.itemQty}>{item.quantity || item.qty}x</Text>
+              <Text style={styles.itemName}>{item.name || item.product?.name || "Produit"}</Text>
+              <Text style={styles.itemPrice}>{(item.price * (item.quantity || item.qty)).toLocaleString()} FCFA</Text>
             </View>
           ))}
         </View>
@@ -115,7 +141,7 @@ export default function OrderDetailScreen({ route, navigation }: any) {
           </View>
           <View style={styles.totalRow}>
             <Text style={styles.totalLabel}>Livraison</Text>
-            <Text style={styles.totalValue}>{order.deliveryFee.toLocaleString()} FCFA</Text>
+            <Text style={styles.totalValue}>{(order.deliveryFee || 0).toLocaleString()} FCFA</Text>
           </View>
           <View style={[styles.totalRow, styles.totalRowFinal]}>
             <Text style={styles.totalFinalLabel}>Total</Text>

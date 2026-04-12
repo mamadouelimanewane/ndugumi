@@ -57,7 +57,10 @@ export default function WalletScreen({ navigation }: any) {
               <Text style={styles.actionBtnIcon}>➕</Text>
               <Text style={styles.actionBtnLabel}>Recharger</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={[styles.actionBtn, styles.actionBtnSecondary]}>
+            <TouchableOpacity 
+              style={[styles.actionBtn, styles.actionBtnSecondary]}
+              onPress={() => Alert.alert("Retrait", "Le retrait de fonds sera disponible après vérification de votre compte par notre équipe.")}
+            >
               <Text style={styles.actionBtnIcon}>📤</Text>
               <Text style={[styles.actionBtnLabel, { color: COLORS.primary }]}>Retirer</Text>
             </TouchableOpacity>

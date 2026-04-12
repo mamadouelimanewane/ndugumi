@@ -25,27 +25,34 @@ export default function ActiveDeliveryScreen({ navigation }: any) {
     return null
   }
 
-  const handleNextStep = () => {
-    if (step === 0) {
-      setCurrentOrder({ ...currentOrder, status: "pickedup" })
-      setStep(1)
-    } else if (step === 1) {
-      setCurrentOrder({ ...currentOrder, status: "delivered" })
-      setStep(2)
-    } else {
-      Alert.alert(
-        "Livraison confirmée !",
-        `Vous avez gagné ${currentOrder.earnings} FCFA pour cette livraison.`,
-        [
-          {
-            text: "Super !",
-            onPress: () => {
-              completeDelivery()
-              navigation.navigate("Home")
+  const handleNextStep = async () => {
+    try {
+      const { ordersAPI } = await import("../../services/api")
+      if (step === 0) {
+        await ordersAPI.updateStatus(currentOrder.id, "PICKED_UP")
+        setCurrentOrder({ ...currentOrder, status: "pickedup" })
+        setStep(1)
+      } else if (step === 1) {
+        await ordersAPI.updateStatus(currentOrder.id, "DELIVERED")
+        setCurrentOrder({ ...currentOrder, status: "delivered" })
+        setStep(2)
+      } else {
+        Alert.alert(
+          "Livraison confirmée !",
+          `Vous avez gagné ${currentOrder.earnings} FCFA pour cette livraison.`,
+          [
+            {
+              text: "Super !",
+              onPress: () => {
+                completeDelivery()
+                navigation.navigate("Home")
+              },
             },
-          },
-        ]
-      )
+          ]
+        )
+      }
+    } catch (e: any) {
+      Alert.alert("Erreur", "Impossible de mettre à jour le statut. " + e.message)
     }
   }
 

@@ -17,6 +17,8 @@ import ProfileScreen from "../screens/profile/ProfileScreen"
 import NotificationsScreen from "../screens/notifications/NotificationsScreen"
 import WalletScreen from "../screens/wallet/WalletScreen"
 import OrderDetailScreen from "../screens/orders/OrderDetailScreen"
+import StoreDetailScreen from "../screens/stores/StoreDetailScreen"
+import ComingSoonScreen from "../screens/ComingSoonScreen"
 
 const Stack = createNativeStackNavigator()
 const Tab = createBottomTabNavigator()
@@ -56,7 +58,8 @@ function MainTabs() {
       />
       <Tab.Screen
         name="Stores"
-        component={HomeScreen}
+        component={ComingSoonScreen}
+        initialParams={{ title: "Tous les Marchés" }}
         options={{ tabBarIcon: ({ focused }) => <TabIcon emoji="🏪" label="Marchés" focused={focused} /> }}
       />
       <Tab.Screen
@@ -111,7 +114,14 @@ function AppStack() {
       <Stack.Screen name="Notifications" component={NotificationsScreen} />
       <Stack.Screen name="Wallet" component={WalletScreen} />
       <Stack.Screen name="OrderDetail" component={OrderDetailScreen} />
-      <Stack.Screen name="StoreDetail" component={HomeScreen} />
+      <Stack.Screen name="StoreDetail" component={StoreDetailScreen} />
+      <Stack.Screen name="EditProfile" component={ComingSoonScreen} initialParams={{ title: "Modifier le profil" }} />
+      <Stack.Screen name="Addresses" component={ComingSoonScreen} initialParams={{ title: "Mes adresses" }} />
+      <Stack.Screen name="Reviews" component={ComingSoonScreen} initialParams={{ title: "Mes avis" }} />
+      <Stack.Screen name="Promo" component={ComingSoonScreen} initialParams={{ title: "Codes promo" }} />
+      <Stack.Screen name="Referral" component={ComingSoonScreen} initialParams={{ title: "Parrainage" }} />
+      <Stack.Screen name="Support" component={ComingSoonScreen} initialParams={{ title: "Aide & Support" }} />
+      <Stack.Screen name="About" component={ComingSoonScreen} initialParams={{ title: "À propos" }} />
     </Stack.Navigator>
   )
 }

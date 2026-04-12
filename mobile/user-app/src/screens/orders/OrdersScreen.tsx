@@ -1,22 +1,33 @@
-import React, { useState } from "react"
-import { View, Text, StyleSheet, FlatList, TouchableOpacity } from "react-native"
+import React, { useEffect, useState } from "react"
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert } from "react-native"
 import { COLORS, FONTS, SPACING, RADIUS } from "../../constants/theme"
-
-const MOCK_ORDERS = [
-  { id: "ORD-3253", store: "Marché Keur Massar", items: 3, total: 12500, status: "Livré", date: "15 mars 2026, 10:30", statusColor: COLORS.success, emoji: "✅" },
-  { id: "ORD-3252", store: "Marché Rufisque", items: 2, total: 8750, status: "En cours", date: "15 mars 2026, 09:45", statusColor: COLORS.warning, emoji: "🚴" },
-  { id: "ORD-3251", store: "France Mangasin", items: 1, total: 5200, status: "En attente", date: "15 mars 2026, 09:00", statusColor: COLORS.info, emoji: "⏳" },
-  { id: "ORD-3244", store: "Marché Keur Massar", items: 5, total: 22000, status: "Livré", date: "14 mars 2026, 18:15", statusColor: COLORS.success, emoji: "✅" },
-  { id: "ORD-3240", store: "Service Traiteur", items: 2, total: 9800, status: "Annulé", date: "13 mars 2026, 12:00", statusColor: COLORS.danger, emoji: "❌" },
-]
+import { ordersAPI } from "../../services/api"
 
 const TABS = ["Tous", "En cours", "Livré", "Annulé"]
 
 export default function OrdersScreen({ navigation }: any) {
   const [activeTab, setActiveTab] = useState("Tous")
+  const [orders, setOrders] = useState<any[]>([])
+  const [loading, setLoading] = useState(false)
 
-  const filtered = MOCK_ORDERS.filter(
-    (o) => activeTab === "Tous" || o.status.includes(activeTab.replace("En cours", "En"))
+  useEffect(() => {
+    fetchOrders()
+  }, [])
+
+  const fetchOrders = async () => {
+    try {
+      setLoading(true)
+      const res = await ordersAPI.getAll()
+      setOrders(res.data)
+    } catch (e) {
+      console.error(e)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const filtered = orders.filter(
+    (o) => activeTab === "Tous" || o.status.toLowerCase().includes(activeTab.toLowerCase().replace("en cours", "pending").replace("livré", "delivered").replace("annulé", "cancelled"))
   )
 
   return (
@@ -40,7 +51,9 @@ export default function OrdersScreen({ navigation }: any) {
 
       <FlatList
         data={filtered}
-        keyExtractor={(i) => i.id}
+        keyExtractor={(i) => i.id || i._id}
+        refreshing={loading}
+        onRefresh={fetchOrders}
         contentContainerStyle={{ padding: SPACING.lg, gap: SPACING.md }}
         showsVerticalScrollIndicator={false}
         renderItem={({ item }) => (
@@ -50,10 +63,10 @@ export default function OrdersScreen({ navigation }: any) {
           >
             <View style={styles.orderHeader}>
               <View style={styles.orderIdRow}>
-                <Text style={styles.orderId}>{item.id}</Text>
-                <View style={[styles.statusBadge, { backgroundColor: item.statusColor + "20" }]}>
-                  <Text style={[styles.statusText, { color: item.statusColor }]}>
-                    {item.emoji} {item.status}
+                <Text style={styles.orderId}>{item.id || item._id}</Text>
+                <View style={[styles.statusBadge, { backgroundColor: (item.statusColor || COLORS.info) + "20" }]}>
+                  <Text style={[styles.statusText, { color: item.statusColor || COLORS.info }]}>
+                    {item.emoji || "📦"} {item.status}
                   </Text>
                 </View>
               </View>
@@ -63,19 +76,25 @@ export default function OrdersScreen({ navigation }: any) {
             <View style={styles.divider} />
 
             <View style={styles.orderBody}>
-              <Text style={styles.storeName}>🏪 {item.store}</Text>
-              <Text style={styles.orderItems}>{item.items} article{item.items > 1 ? "s" : ""}</Text>
+              <Text style={styles.storeName}>🏪 {item.store?.name || item.storeName || "Boutique"}</Text>
+              <Text style={styles.orderItems}>{item.items?.length || item.itemCount || 0} article{(item.items?.length || 0) > 1 ? "s" : ""}</Text>
             </View>
 
             <View style={styles.orderFooter}>
               <Text style={styles.orderTotal}>{item.total.toLocaleString()} FCFA</Text>
               {item.status === "Livré" && (
-                <TouchableOpacity style={styles.reorderBtn}>
+                <TouchableOpacity 
+                  style={styles.reorderBtn}
+                  onPress={() => Alert.alert("Recommander", "Cette commande a été ajoutée à votre panier")}
+                >
                   <Text style={styles.reorderText}>↺ Recommander</Text>
                 </TouchableOpacity>
               )}
-              {item.status === "En cours" && (
-                <TouchableOpacity style={styles.trackBtn}>
+              {(item.status === "En cours" || item.status === "Deliverign" || item.status === "Pending") && (
+                <TouchableOpacity 
+                  style={styles.trackBtn}
+                  onPress={() => navigation.navigate("OrderDetail", { order: item })}
+                >
                   <Text style={styles.trackText}>📍 Suivre</Text>
                 </TouchableOpacity>
               )}

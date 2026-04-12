@@ -1,10 +1,12 @@
 import React, { useState } from "react"
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,
-  ScrollView, KeyboardAvoidingView, Platform, ActivityIndicator,
+  ScrollView, KeyboardAvoidingView, Platform, ActivityIndicator, Alert,
 } from "react-native"
 import { COLORS, FONTS, SPACING, RADIUS } from "../../constants/theme"
 import { useStore } from "../../store/useStore"
+import { authAPI } from "../../services/api"
+import * as SecureStore from 'expo-secure-store'
 
 export default function RegisterScreen({ navigation }: any) {
   const [form, setForm] = useState({ name: "", phone: "", email: "", password: "", confirmPassword: "" })
@@ -14,12 +16,32 @@ export default function RegisterScreen({ navigation }: any) {
   function update(key: string, val: string) { setForm((f) => ({ ...f, [key]: val })) }
 
   async function handleRegister() {
-    if (!form.name || !form.phone || !form.password) return
+    if (!form.name || !form.phone || !form.password) {
+      Alert.alert("Erreur", "Veuillez remplir les champs obligatoires.")
+      return
+    }
+    if (form.password !== form.confirmPassword) {
+      Alert.alert("Erreur", "Les mots de passe ne correspondent pas.")
+      return
+    }
+
     setLoading(true)
-    setTimeout(() => {
+    try {
+      const response = await authAPI.register({
+        name: form.name,
+        phone: form.phone,
+        email: form.email || undefined,
+        password: form.password
+      })
+      
+      const { user, token } = response.data
+      await SecureStore.setItemAsync("user_token", token)
+      setUser(user, token)
+    } catch (error: any) {
+      Alert.alert("Erreur", error.message || "Échec de l'inscription")
+    } finally {
       setLoading(false)
-      setUser({ id: "1", name: form.name, email: form.email, phone: form.phone }, "mock_token")
-    }, 1200)
+    }
   }
 
   return (
