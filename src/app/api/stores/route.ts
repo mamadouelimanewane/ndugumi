@@ -10,6 +10,7 @@ const stores = [
     deliveryTime: "25-40 min",
     minOrder: 2000,
     tag: "Populaire",
+    category: "Légumes",
     emoji: "🏪"
   },
   {
@@ -20,6 +21,7 @@ const stores = [
     rating: 4.8,
     deliveryTime: "30-45 min",
     minOrder: 1500,
+    category: "Poisson",
     emoji: "🛒"
   },
   {
@@ -31,6 +33,7 @@ const stores = [
     deliveryTime: "15-25 min",
     minOrder: 1000,
     tag: "Nouveau",
+    category: "Viande",
     emoji: "🍞"
   }
 ]

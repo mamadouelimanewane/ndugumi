@@ -1,15 +1,13 @@
 import React, { useState, useEffect } from "react"
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
-  FlatList, Image, Dimensions, TextInput, Alert,
+  FlatList, Image, Dimensions, TextInput, Alert, Modal,
 } from "react-native"
 import { COLORS, FONTS, SPACING, RADIUS } from "../../constants/theme"
 import { useStore } from "../../store/useStore"
 import { storesAPI, categoriesAPI, sliderAPI } from "../../services/api"
 
-const { width } = Dimensions.get("window")
-
-// Mocks moved inside component or fetched from API
+const { width, height } = Dimensions.get("window")
 
 export default function HomeScreen({ navigation }: any) {
   const [bannerIndex, setBannerIndex] = useState(0)
@@ -17,6 +15,9 @@ export default function HomeScreen({ navigation }: any) {
   const [banners, setBanners] = useState<any[]>([])
   const [categories, setCategories] = useState<any[]>([])
   const [stores, setStores] = useState<any[]>([])
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
+  const [showFilterModal, setShowFilterModal] = useState(false)
+  
   const user = useStore((s) => s.user)
   const cartCount = useStore((s) => s.cartCount)()
   const unreadCount = useStore((s) => s.unreadCount)
@@ -44,13 +45,23 @@ export default function HomeScreen({ navigation }: any) {
     }
   }
 
+  const filteredStores = stores.filter(s => 
+    (!selectedCategory || s.category === selectedCategory) &&
+    (s.name.toLowerCase().includes(search.toLowerCase()))
+  )
+
+  const toggleCategory = (catName: string) => {
+    if (selectedCategory === catName) setSelectedCategory(null)
+    else setSelectedCategory(catName)
+  }
+
   return (
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
         <View>
           <Text style={styles.greeting}>Bonjour, {user?.name?.split(" ")[0] || "Bienvenue"} 👋</Text>
-          <TouchableOpacity activeOpacity={0.7} style={styles.locationRow} onPress={() => Alert.alert("Localisation", "Fonctionnalité de changement d'adresse bientôt disponible")}>
+          <TouchableOpacity activeOpacity={0.7} style={styles.locationRow} onPress={() => Alert.alert("Localisation", "Bientôt disponible")}>
             <Text style={styles.locationIcon}>📍</Text>
             <Text style={styles.locationText}>Dakar, Sénégal</Text>
             <Text style={styles.locationChevron}>▼</Text>
@@ -81,7 +92,7 @@ export default function HomeScreen({ navigation }: any) {
               placeholderTextColor={COLORS.gray}
             />
           </View>
-          <TouchableOpacity activeOpacity={0.7} style={styles.filterBtn} onPress={() => Alert.alert("Filtres", "La recherche avancée arrive bientôt")}>
+          <TouchableOpacity activeOpacity={0.7} style={styles.filterBtn} onPress={() => setShowFilterModal(true)}>
             <Text style={styles.filterIcon}>⚙️</Text>
           </TouchableOpacity>
         </View>
@@ -119,7 +130,11 @@ export default function HomeScreen({ navigation }: any) {
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Catégories</Text>
-            <TouchableOpacity activeOpacity={0.7} onPress={() => navigation.navigate("Stores")}><Text style={styles.seeAll}>Voir tout</Text></TouchableOpacity>
+            {selectedCategory && (
+              <TouchableOpacity onPress={() => setSelectedCategory(null)}>
+                <Text style={styles.seeAll}>Réinitialiser</Text>
+              </TouchableOpacity>
+            )}
           </View>
           <FlatList
             data={categories}
@@ -127,29 +142,38 @@ export default function HomeScreen({ navigation }: any) {
             showsHorizontalScrollIndicator={false}
             keyExtractor={(i) => i.id || i._id}
             contentContainerStyle={{ paddingHorizontal: SPACING.lg, gap: SPACING.sm }}
-            renderItem={({ item }) => (
-              <TouchableOpacity 
-                activeOpacity={0.7}
-                style={[styles.categoryCard, { backgroundColor: item.color || "#F5F5F5" }]}
-                onPress={() => Alert.alert("Catégorie", `Filtrer par ${item.name} bientôt disponible`)}
-              >
-                <Text style={styles.categoryEmoji}>{item.emoji || "📦"}</Text>
-                <Text style={styles.categoryName}>{item.name}</Text>
-              </TouchableOpacity>
-            )}
+            renderItem={({ item }) => {
+              const active = selectedCategory === item.name
+              return (
+                <TouchableOpacity 
+                  activeOpacity={0.7}
+                  style={[
+                    styles.categoryCard, 
+                    { backgroundColor: item.color || "#F5F5F5" },
+                    active && { borderColor: COLORS.primary, borderWidth: 2 }
+                  ]}
+                  onPress={() => toggleCategory(item.name)}
+                >
+                  <Text style={styles.categoryEmoji}>{item.emoji || "📦"}</Text>
+                  <Text style={[styles.categoryName, active && { color: COLORS.primary }]}>{item.name}</Text>
+                </TouchableOpacity>
+              )
+            }}
           />
         </View>
 
         {/* Nearby Stores */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Marchés à proximité</Text>
+            <Text style={styles.sectionTitle}>
+              {selectedCategory ? `Marchés: ${selectedCategory}` : "Marchés à proximité"}
+            </Text>
             <TouchableOpacity onPress={() => navigation.navigate("Stores")}>
               <Text style={styles.seeAll}>Voir tout</Text>
             </TouchableOpacity>
           </View>
           <View style={{ paddingHorizontal: SPACING.lg, gap: SPACING.md }}>
-            {stores.map((store) => (
+            {filteredStores.length > 0 ? filteredStores.map((store) => (
               <TouchableOpacity
                 key={store.id || store._id}
                 activeOpacity={0.9}
@@ -178,12 +202,55 @@ export default function HomeScreen({ navigation }: any) {
                   </View>
                 </View>
               </TouchableOpacity>
-            ))}
+            )) : (
+              <View style={styles.emptyResults}>
+                <Text style={{ fontSize: 40 }}>🔎</Text>
+                <Text style={styles.emptyResultsText}>Aucun marché trouvé pour cette recherche.</Text>
+              </View>
+            )}
           </View>
         </View>
 
         <View style={{ height: SPACING.xxl }} />
       </ScrollView>
+
+      {/* Filter Modal */}
+      <Modal visible={showFilterModal} transparent animationType="slide">
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Filtres avancés</Text>
+              <TouchableOpacity onPress={() => setShowFilterModal(false)}>
+                <Text style={{ fontSize: 24 }}>✕</Text>
+              </TouchableOpacity>
+            </View>
+            
+            <View style={styles.modalBody}>
+              <Text style={styles.modalLabel}>Trier par</Text>
+              <View style={styles.modalOptions}>
+                {["Note", "Prix", "Temps"].map(o => (
+                  <TouchableOpacity key={o} style={styles.optionBtn}>
+                    <Text style={styles.optionText}>{o}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+
+              <Text style={styles.modalLabel}>Distance maximale</Text>
+              <View style={styles.modalOptions}>
+                {["2km", "5km", "10km", "Tout"].map(o => (
+                  <TouchableOpacity key={o} style={styles.optionBtn}>
+                    <Text style={styles.optionText}>{o}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+
+            <TouchableOpacity style={styles.applyBtn} onPress={() => setShowFilterModal(false)}>
+              <Text style={styles.applyBtnText}>Appliquer les filtres</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </View>
   )
 }
@@ -306,7 +373,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     gap: 6,
-    borderWidth: 1,
+    borderWidth: 2,
     borderColor: "transparent",
   },
   categoryEmoji: { fontSize: 32 },
@@ -346,4 +413,17 @@ const styles = StyleSheet.create({
   storeSep: { color: COLORS.gray, fontSize: 10 },
   storeDelivery: { fontSize: 12, color: COLORS.textSecondary, fontWeight: "500" },
   storeMin: { fontSize: 12, color: COLORS.primary, fontWeight: "600" },
+  emptyResults: { alignItems: "center", paddingVertical: SPACING.xxl, gap: SPACING.md },
+  emptyResultsText: { color: COLORS.textSecondary, fontSize: FONTS.sizes.sm, fontWeight: "500", textAlign: "center" },
+  modalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "flex-end" },
+  modalContent: { backgroundColor: COLORS.white, borderTopLeftRadius: RADIUS.xl, borderTopRightRadius: RADIUS.xl, padding: SPACING.lg, maxHeight: height * 0.7 },
+  modalHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: SPACING.xl },
+  modalTitle: { fontSize: FONTS.sizes.xl, fontWeight: "800", color: COLORS.text },
+  modalBody: { gap: SPACING.xl },
+  modalLabel: { fontSize: FONTS.sizes.md, fontWeight: "700", color: COLORS.text },
+  modalOptions: { flexDirection: "row", flexWrap: "wrap", gap: SPACING.md },
+  optionBtn: { paddingHorizontal: 20, paddingVertical: 10, backgroundColor: COLORS.grayLight, borderRadius: RADIUS.md },
+  optionText: { fontSize: FONTS.sizes.sm, fontWeight: "600", color: COLORS.text },
+  applyBtn: { backgroundColor: COLORS.primary, paddingVertical: 16, borderRadius: RADIUS.md, alignItems: "center", marginTop: SPACING.xxl },
+  applyBtnText: { color: COLORS.white, fontSize: FONTS.sizes.md, fontWeight: "800" },
 })
