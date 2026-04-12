@@ -22,6 +22,8 @@ interface Order {
   distance: string
   earnings: number
   status: "pending" | "accepted" | "pickedup" | "delivered"
+  isBatched?: boolean
+  batchedOrdersCount?: number
 }
 
 interface DriverStore {
@@ -58,14 +60,16 @@ export const useDriverStore = create<DriverStore>((set, get) => ({
     {
       id: "ORD-3253",
       storeAddress: "Marché Keur Massar, Dakar",
-      deliveryAddress: "Cité Fadia, Appartement B4, Dakar",
-      customerName: "Fatou Diallo",
+      deliveryAddress: "Cité Fadia (et 1 autre sur le trajet)",
+      customerName: "Fatou Diallo & Moussa Ba",
       customerPhone: "+221 77 123 45 67",
-      total: 12500,
-      items: 3,
-      distance: "2.4 km",
-      earnings: 800,
+      total: 24500,
+      items: 8,
+      distance: "2.8 km",
+      earnings: 1500,
       status: "pending",
+      isBatched: true,
+      batchedOrdersCount: 2,
     },
     {
       id: "ORD-3254",

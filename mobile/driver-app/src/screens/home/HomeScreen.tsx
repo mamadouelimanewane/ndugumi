@@ -132,9 +132,17 @@ export default function HomeScreen({ navigation }: any) {
             </View>
             {pendingOrders.map((order) => (
               <View key={order.id} style={styles.requestCard}>
-                <View style={styles.requestMain}>
+                {order.isBatched && (
+                  <View style={{ backgroundColor: "#FEF3C7", paddingHorizontal: 16, paddingVertical: 8, flexDirection: "row", alignItems: "center", borderBottomWidth: 1, borderBottomColor: COLORS.border }}>
+                    <Text style={{ marginRight: 6 }}>🔄</Text>
+                    <Text style={{ fontSize: 12, fontWeight: "800", color: "#B45309" }}>
+                      TRAJET GROUPÉ : {order.batchedOrdersCount} commandes sur la même route
+                    </Text>
+                  </View>
+                )}
+                <View style={[styles.requestMain, order.isBatched && { backgroundColor: "#FFFBEB" }]}>
                   <View style={styles.requestHeader}>
-                    <Text style={styles.requestId}>Commande #{order.id.slice(-4)}</Text>
+                    <Text style={styles.requestId}>{order.isBatched ? "Commandes Multiples" : `Commande #${order.id.slice(-4)}`}</Text>
                     <Text style={styles.requestEarnings}>+{order.earnings} FCFA</Text>
                   </View>
                   <View style={styles.requestRoute}>
@@ -154,7 +162,9 @@ export default function HomeScreen({ navigation }: any) {
                 </View>
                 <View style={styles.requestActions}>
                   <TouchableOpacity activeOpacity={0.7} style={styles.acceptBtn} onPress={() => handleAccept(order)}>
-                    <Text style={styles.acceptBtnText}>ACCEPTER LA MISSION</Text>
+                    <Text style={styles.acceptBtnText}>
+                      {order.isBatched ? `ACCEPTER LES ${order.batchedOrdersCount} MISSIONS` : "ACCEPTER LA MISSION"}
+                    </Text>
                   </TouchableOpacity>
                 </View>
               </View>

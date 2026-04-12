@@ -79,6 +79,13 @@ function OrdersContent() {
         <button onClick={() => setSearch("")} className="p-2 border border-gray-200 rounded-xl text-gray-500 hover:bg-gray-50 transition-colors">
           <RefreshCw size={16} />
         </button>
+        <button onClick={() => {
+          const audio = new Audio("https://actions.google.com/sounds/v1/alarms/beep_short.ogg")
+          audio.play().catch(console.error)
+          alert("🔔 Alarme déclenchée : Une nouvelle commande (ou notification de livraison globale) requiert votre attention immédiate.")
+        }} className="flex items-center gap-2 px-3 py-2 border border-blue-200 bg-blue-50 rounded-xl text-sm font-semibold text-blue-600 hover:bg-blue-100 transition-colors shadow-sm cursor-pointer" title="Tester la notification sonore de commande">
+          🔔 Alarme de notification
+        </button>
       </div>
 
       <div className="grid lg:grid-cols-3 gap-5">
@@ -180,7 +187,7 @@ function OrdersContent() {
                     <span>{selectedOrder.total.toLocaleString("fr-FR")} FCFA</span>
                   </div>
                 </div>
-                {selectedOrder.driver && (
+                {selectedOrder.driver ? (
                   <div>
                     <div className="text-xs font-semibold text-gray-500 mb-1">LIVREUR</div>
                     <div className="flex items-center gap-2 p-2 bg-cyan-50 rounded-xl">
@@ -190,7 +197,21 @@ function OrdersContent() {
                       <span className="text-sm font-medium text-gray-700">{selectedOrder.driver}</span>
                     </div>
                   </div>
-                )}
+                ) : selectedOrder.status === "En préparation" || selectedOrder.status === "En attente" ? (
+                  <div className="mt-4 pt-4 border-t border-gray-100">
+                    <div className="text-xs font-semibold text-gray-500 mb-2">ASSIGNATION LIVREUR</div>
+                    <select className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-cyan-300 text-gray-700 bg-white">
+                      <option value="auto">🤖 Assignation automatique (Le plus proche)</option>
+                      <option value="manual_1">🛵 Cheikh Diop (À 200m - Actif)</option>
+                      <option value="manual_2">🛵 Ibrahima Sarr (À 500m - Actif)</option>
+                      <option value="manual_3">🛵 Babacar Ndiaye (À 1.2km - Actif)</option>
+                    </select>
+                    <p className="text-[10px] text-gray-500 mt-1">Laissez sur Automatique pour l'assigner au livreur le plus proche sur le même itinéraire.</p>
+                    <button onClick={() => alert("Livreur assigné avec succès. Le livreur recevra une notification.")} className="w-full mt-2 py-2 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-xl text-xs font-semibold transition-colors">
+                      Valider l'assignation
+                    </button>
+                  </div>
+                ) : null}
                 <button className="w-full py-2.5 border border-gray-200 rounded-xl text-sm text-gray-600 hover:bg-gray-50 transition-colors flex items-center justify-center gap-2">
                   <Eye size={15} /> Voir détails complets
                 </button>
