@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts"
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from "recharts"
 import { Download, Search, RefreshCw } from "lucide-react"
 import StatusBadge from "@/components/ui/StatusBadge"
 
@@ -44,9 +44,17 @@ export default function EarningsPage() {
   const paginated = filtered.slice((page - 1) * perPage, page * perPage)
 
   const totalOrderAmount = filtered.reduce((s, o) => s + o.total, 0)
-  const merchantEarning = filtered.reduce((s, o) => s + o.orderEarning, 0)
+  const merchantEarning = filtered.reduce((s, o) => s + o.orderEarning, 0) // Commission plateforme
   const storeEarning = filtered.reduce((s, o) => s + o.storeEarning, 0)
+  const totalDeliveryFees = filtered.reduce((s, o) => s + o.deliveryFee, 0)
+  const totalSubtotal = filtered.reduce((s, o) => s + o.subtotal, 0)
   const totalOrders = filtered.filter((o) => o.status === "Completed").length
+
+  const pieData = [
+    { name: "Revenus Magasins", value: storeEarning, color: "#FFA114" },
+    { name: "Commissions Plateforme", value: merchantEarning, color: "#9333ea" },
+    { name: "Frais de Livraison (Livreurs)", value: totalDeliveryFees, color: "#06b6d4" },
+  ]
 
   function reset() { setDateFrom(""); setDateTo(""); setStoreFilter(""); setOrderIdFilter("") }
 
@@ -118,18 +126,68 @@ export default function EarningsPage() {
         ))}
       </div>
 
-      {/* Monthly Chart */}
-      <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
-        <h2 className="font-semibold text-gray-700 mb-4">Revenus mensuels (FCFA)</h2>
-        <ResponsiveContainer width="100%" height={250}>
-          <BarChart data={monthlyData}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-            <XAxis dataKey="month" tick={{ fontSize: 12 }} />
-            <YAxis tick={{ fontSize: 12 }} />
-            <Tooltip formatter={(v) => [`${Number(v).toLocaleString()} FCFA`, "Revenus"]} />
-            <Bar dataKey="earning" fill="#6B6BD5" radius={[4, 4, 0, 0]} />
-          </BarChart>
-        </ResponsiveContainer>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Monétisation Breakdown Chart */}
+        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
+          <h2 className="font-semibold text-gray-700 mb-4">Répartition Financière (Volume Global)</h2>
+          <div className="flex flex-col md:flex-row items-center gap-4">
+            <div className="w-full md:w-1/2 h-[200px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={pieData}
+                    innerRadius={60}
+                    outerRadius={80}
+                    paddingAngle={5}
+                    dataKey="value"
+                  >
+                    {pieData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip formatter={(value) => `${Number(value).toLocaleString()} FCFA`} />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+            <div className="w-full md:w-1/2 space-y-3">
+              {pieData.map((item) => (
+                <div key={item.name} className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }}></div>
+                    <span className="text-sm text-gray-600 font-medium">{item.name}</span>
+                  </div>
+                  <span className="text-sm font-bold text-gray-800">{item.value.toLocaleString()}</span>
+                </div>
+              ))}
+              <div className="pt-3 mt-3 border-t border-gray-100">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-800 font-bold">Volume Total (GMV)</span>
+                  <span className="text-sm font-bold text-blue-600">{totalOrderAmount.toLocaleString()} FCFA</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Monthly Chart */}
+        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
+          <h2 className="font-semibold text-gray-700 mb-4">Évolution des Commissions Ndugumi</h2>
+          <ResponsiveContainer width="100%" height={200}>
+            <BarChart data={monthlyData}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
+              <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: "#9ca3af" }} />
+              <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: "#9ca3af" }} width={60} />
+              <Tooltip 
+                cursor={{ fill: "#f3f4f6" }}
+                contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                formatter={(v) => [`${Number(v).toLocaleString()} FCFA`, "Commissions"]} 
+              />
+              <Bar dataKey="earning" fill="#9333ea" radius={[6, 6, 0, 0]} barSize={32} />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
       </div>
 
       {/* Earnings Table */}
