@@ -35,19 +35,31 @@ export async function POST(req: Request) {
     })
 
     if (!user) {
-      return NextResponse.json({ message: "Utilisateur non trouvé" }, { status: 404 })
+      const res = NextResponse.json({ message: "Utilisateur non trouvé" }, { status: 404 })
+      res.headers.set("Access-Control-Allow-Origin", "*")
+      res.headers.set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+      res.headers.set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+      return res
     }
 
-    // Note: Dans ce projet, le mot de passe n'est pas stocké dans le modèle User initial
-    // On simule une validation réussie pour le moment
+    // Simulation reussie pour le moment
     const token = jwt.sign({ userId: user.id }, JWT_SECRET)
 
-    return NextResponse.json({
-      user,
-      token
-    })
+    const res = NextResponse.json({ user, token })
+    res.headers.set("Access-Control-Allow-Origin", "*")
+    res.headers.set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+    res.headers.set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+    return res
   } catch (error) {
     console.error("Login error:", error)
-    return NextResponse.json({ message: "Erreur serveur" }, { status: 500 })
+    return NextResponse.json({ message: "Erreur serveur" }, { status: 500, headers: { "Access-Control-Allow-Origin": "*" } })
   }
+}
+
+export async function OPTIONS() {
+  const res = new NextResponse(null, { status: 204 })
+  res.headers.set("Access-Control-Allow-Origin", "*")
+  res.headers.set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+  res.headers.set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+  return res
 }
