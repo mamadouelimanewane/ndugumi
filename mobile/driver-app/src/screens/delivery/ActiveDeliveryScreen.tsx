@@ -10,7 +10,8 @@ import {
   Dimensions
 } from "react-native"
 import * as Location from "expo-location"
-import MapView, { Marker, Polyline } from "react-native-maps"
+import MapView, { Marker, Polyline, UrlTile, PROVIDER_DEFAULT } from "react-native-maps"
+import { MAP_TILE_URL } from "../../constants/maps"
 import { useDriverStore } from "../../store/useDriverStore"
 
 const STEPS = [
@@ -94,6 +95,8 @@ export default function ActiveDeliveryScreen({ navigation }: any) {
         {location ? (
           <MapView
             style={styles.mapActual}
+            provider={PROVIDER_DEFAULT}
+            mapType="none"
             initialRegion={{
               latitude: location.coords.latitude,
               longitude: location.coords.longitude,
@@ -103,12 +106,12 @@ export default function ActiveDeliveryScreen({ navigation }: any) {
             showsUserLocation={true}
             showsMyLocationButton={true}
           >
+            {/* Tuiles LocationIQ (OpenStreetMap) — zéro dependance Google */}
+            <UrlTile urlTemplate={MAP_TILE_URL} maximumZ={19} flipY={false} />
             {/* Magasin */}
             <Marker coordinate={{ latitude: location.coords.latitude + 0.01, longitude: location.coords.longitude - 0.005 }} title="Magasin (Point Collecte)" pinColor="orange" />
-            
-            {/* Client (MOCK Coordinates pour le design) */}
+            {/* Client */}
             <Marker coordinate={{ latitude: location.coords.latitude + 0.02, longitude: location.coords.longitude + 0.01 }} title="Client (Destination)" pinColor="green" />
-            
             <Polyline coordinates={[
               { latitude: location.coords.latitude, longitude: location.coords.longitude },
               { latitude: location.coords.latitude + 0.01, longitude: location.coords.longitude - 0.005 },

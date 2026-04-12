@@ -3,8 +3,9 @@ import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
   SafeAreaView, Linking, Dimensions,
 } from "react-native"
-import MapView, { Marker, Polyline, AnimatedRegion, Camera } from "react-native-maps"
+import MapView, { Marker, Polyline, UrlTile, PROVIDER_DEFAULT } from "react-native-maps"
 import * as Location from "expo-location"
+import { MAP_TILE_URL } from "../../constants/maps"
 import { COLORS, FONTS, SPACING, RADIUS } from "../../constants/theme"
 
 export default function OrderDetailScreen({ route, navigation }: any) {
@@ -82,6 +83,8 @@ export default function OrderDetailScreen({ route, navigation }: any) {
           <View style={styles.mapContainer}>
             <MapView
               style={styles.map}
+              provider={PROVIDER_DEFAULT}
+              mapType="none"
               initialRegion={{
                 latitude: userCoords.latitude,
                 longitude: userCoords.longitude,
@@ -91,6 +94,8 @@ export default function OrderDetailScreen({ route, navigation }: any) {
               showsUserLocation={true}
               showsMyLocationButton={false}
             >
+              {/* Tuiles LocationIQ (OpenStreetMap) — sans Google Maps */}
+              <UrlTile urlTemplate={MAP_TILE_URL} maximumZ={19} flipY={false} />
               {/* Magasin (mock offset) */}
               <Marker
                 coordinate={{ latitude: userCoords.latitude + 0.008, longitude: userCoords.longitude - 0.004 }}
