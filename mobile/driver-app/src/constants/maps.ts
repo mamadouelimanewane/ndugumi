@@ -8,7 +8,7 @@
 export const GOOGLE_MAPS_KEY = "AIzaSyAK3BjGZQy70ogTMi1yr8W8Yw4YeeZ2PK8"
 
 // Clé LocationIQ (directions + géocodage uniquement)
-export const LOCATIONIQ_KEY = "pk.REMPLACEZ_PAR_VOTRE_CLE_LOCATIONIQ"
+export const LOCATIONIQ_KEY = "pk.ef8f3d80db02a286ae4b6fae736af632"
 
 // API Directions LocationIQ (OSRM-based, pas Google Directions)
 // Format : lat/lng ORIGINE → DESTINATION
