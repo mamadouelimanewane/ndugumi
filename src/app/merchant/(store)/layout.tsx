@@ -5,7 +5,7 @@ import { useSearchParams, usePathname } from "next/navigation"
 import Link from "next/link"
 import {
   LayoutDashboard, ShoppingBag, UtensilsCrossed, Wallet,
-  Star, User, Settings, Bell, LogOut, Menu, X, ChefHat,
+  Star, User, Settings, Bell, LogOut, Menu, X, ChefHat, Calculator,
   ChevronDown, ChevronRight
 } from "lucide-react"
 import { Loader2 } from "lucide-react"
@@ -24,6 +24,7 @@ const navItems = [
   { href: "/merchant/dashboard", icon: LayoutDashboard, label: "Tableau de bord" },
   { href: "/merchant/orders", icon: ShoppingBag, label: "Commandes", badge: 3 },
   { href: "/merchant/products", icon: UtensilsCrossed, label: "Catalogue produits" },
+  { href: "/merchant/accounting", icon: Calculator, label: "Comptabilité" },
   { href: "/merchant/wallet", icon: Wallet, label: "Portefeuille" },
   { href: "/merchant/reviews", icon: Star, label: "Évaluations" },
   { href: "/merchant/profile", icon: User, label: "Profil magasin" },
