@@ -4,7 +4,7 @@ import {
 } from "react-native"
 import { COLORS, FONTS, SPACING, RADIUS } from "../../constants/theme"
 import { useStore } from "../../store/useStore"
-import { ordersAPI } from "../../services/api"
+import { ordersAPI, walletAPI } from "../../services/api"
 
 export default function CartScreen({ navigation }: any) {
   const cart = useStore((s) => s.cart)
@@ -114,6 +114,26 @@ export default function CartScreen({ navigation }: any) {
         data={cart}
         keyExtractor={(i) => i.id}
         contentContainerStyle={{ padding: SPACING.lg, gap: SPACING.md }}
+        ListFooterComponent={() => (
+          <View style={styles.upsellSection}>
+            <Text style={styles.upsellTitle}>Vous aimeriez aussi...</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: SPACING.md, paddingVertical: SPACING.sm }}>
+              {[
+                { id: 'u1', name: 'Pain frais', price: 200, emoji: '🥖' },
+                { id: 'u2', name: 'Lait entier', price: 1200, emoji: '🥛' },
+                { id: 'u3', name: 'Dattes (500g)', price: 2500, emoji: '🌴' },
+                { id: 'u4', name: 'Bananes (kg)', price: 800, emoji: '🍌' },
+              ].map(item => (
+                <TouchableOpacity key={item.id} style={styles.upsellCard} onPress={() => Alert.alert("Produit ajouté", `${item.name} a été ajouté au panier.`)}>
+                  <View style={styles.upsellImage}><Text style={{fontSize: 24}}>{item.emoji}</Text></View>
+                  <Text style={styles.upsellName}>{item.name}</Text>
+                  <Text style={styles.upsellPrice}>{item.price} F</Text>
+                  <View style={styles.addMini}><Text style={{color: COLORS.white, fontSize: 16}}>+</Text></View>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+        )}
         renderItem={({ item }) => (
           <View style={styles.cartItem}>
             <View style={styles.itemImagePlaceholder}>
@@ -244,4 +264,11 @@ const styles = StyleSheet.create({
   methodText: { fontSize: FONTS.sizes.sm, fontWeight: "600", color: COLORS.textSecondary },
   methodTextActive: { color: COLORS.primary },
   balanceText: { fontSize: 10, color: COLORS.textSecondary, textAlign: "center", marginTop: 2 },
+  upsellSection: { marginTop: SPACING.lg, paddingBottom: SPACING.md },
+  upsellTitle: { fontSize: FONTS.sizes.md, fontWeight: "800", color: COLORS.text, marginBottom: SPACING.sm },
+  upsellCard: { width: 110, backgroundColor: COLORS.white, borderRadius: RADIUS.md, padding: SPACING.sm, alignItems: "center", borderWidth: 1, borderColor: COLORS.grayMedium, position: 'relative' },
+  upsellImage: { width: 50, height: 50, backgroundColor: COLORS.grayLight, borderRadius: 25, alignItems: "center", justifyContent: "center", marginBottom: 6 },
+  upsellName: { fontSize: 10, fontWeight: "600", color: COLORS.text, textAlign: "center" },
+  upsellPrice: { fontSize: 12, fontWeight: "800", color: COLORS.primary, marginTop: 2 },
+  addMini: { position: 'absolute', top: -5, right: -5, width: 20, height: 20, borderRadius: 10, backgroundColor: COLORS.primary, alignItems: "center", justifyContent: "center" },
 })

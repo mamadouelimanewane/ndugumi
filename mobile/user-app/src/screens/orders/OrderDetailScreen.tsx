@@ -140,6 +140,10 @@ export default function OrderDetailScreen({ route, navigation }: any) {
 
         {/* Suivi en temps réel - Étapes */}
         <View style={styles.trackingCard}>
+          <View style={{ marginBottom: SPACING.md }}>
+            <Text style={styles.cardTitle}>🔑 Code de livraison : <Text style={{color: COLORS.primary, fontSize: 22}}>{order.deliveryPin || "----"}</Text></Text>
+            <Text style={{fontSize: 11, color: COLORS.textSecondary, marginTop: 4}}>À donner au livreur uniquement à la réception du colis.</Text>
+          </View>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: SPACING.md }}>
             <Text style={styles.cardTitle}>🛥 Suivi en temps réel</Text>
             {["PICKED_UP", "ACCEPTED", "ASSIGNED"].includes(order.status) && (

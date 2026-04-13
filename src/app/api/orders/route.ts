@@ -9,6 +9,8 @@ export async function POST(req: Request) {
 
     const { storeId, total, address, items } = await req.json()
 
+    const deliveryPin = Math.floor(1000 + Math.random() * 9000).toString()
+
     const newOrder = await prisma.order.create({
       data: {
         userId: user.id,
@@ -16,8 +18,9 @@ export async function POST(req: Request) {
         total: total,
         address: address,
         status: "Pending",
-        paymentStatus: "Pending",
-        orderId: Math.floor(1000 + Math.random() * 9000).toString(), // Simple numeric ID
+        items: items || [], // Missing in previous version
+        deliveryPin: deliveryPin,
+        orderId: `NDG-${Math.floor(100000 + Math.random() * 900000)}`,
       }
     })
 
