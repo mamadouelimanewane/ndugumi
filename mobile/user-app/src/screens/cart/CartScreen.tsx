@@ -1,6 +1,6 @@
 import React from "react"
 import {
-  View, Text, StyleSheet, FlatList, TouchableOpacity, Alert,
+  View, Text, StyleSheet, FlatList, TouchableOpacity, Alert, ScrollView,
 } from "react-native"
 import { COLORS, FONTS, SPACING, RADIUS } from "../../constants/theme"
 import { useStore } from "../../store/useStore"

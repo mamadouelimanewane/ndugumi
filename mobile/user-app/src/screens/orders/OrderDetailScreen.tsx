@@ -326,4 +326,5 @@ const styles = StyleSheet.create({
   totalValue: { fontSize: FONTS.sizes.sm, color: COLORS.text },
   totalFinalLabel: { fontSize: FONTS.sizes.md, fontWeight: "800", color: COLORS.text },
   totalFinalValue: { fontSize: FONTS.sizes.md, fontWeight: "800", color: COLORS.primary },
+  center: { flex: 1, justifyContent: "center", alignItems: "center" },
 })

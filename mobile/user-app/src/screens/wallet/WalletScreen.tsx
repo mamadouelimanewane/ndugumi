@@ -15,7 +15,7 @@ const PAYMENT_METHODS = [
 
 export default function WalletScreen({ navigation }: any) {
   const user = useStore((s) => s.user)
-  const setUser = useStore((s) => s.setUser)
+  const updateUser = useStore((s) => s.updateUser)
   const balance = user?.walletMoney ?? 0
   
   const [showRecharge, setShowRecharge] = useState(false)
@@ -32,7 +32,7 @@ export default function WalletScreen({ navigation }: any) {
 
   const fetchHistory = async () => {
     try {
-      const res = await axios.get(`${API_URL}/wallet/history?userId=${user.id}`)
+      const res = await axios.get(`${API_URL}/wallet/history?userId=${user?.id}`)
       setTransactions(res.data)
     } catch (error) {
       console.log("History err", error)
@@ -49,6 +49,7 @@ export default function WalletScreen({ navigation }: any) {
     // Simulate an interaction with Wave/Orange API latency
     setTimeout(async () => {
       try {
+        if (!user) return
         const res = await axios.post(`${API_URL}/wallet/topup`, {
           userId: user.id,
           amount: Number(amount),
@@ -57,7 +58,7 @@ export default function WalletScreen({ navigation }: any) {
         
         // Update local user context
         if (res.data.walletMoney !== undefined) {
-          setUser({ ...user, walletMoney: res.data.walletMoney })
+          updateUser({ walletMoney: res.data.walletMoney })
         }
         
         setShowRecharge(false)

@@ -16,6 +16,8 @@ interface User {
   email: string
   phone?: string
   walletBalance?: number
+  walletMoney?: number
+  referralCode?: string
 }
 
 interface AppStore {
@@ -24,6 +26,7 @@ interface AppStore {
   token: string | null
   isAuthenticated: boolean
   setUser: (user: User, token: string) => void
+  updateUser: (user: Partial<User>) => void
   logout: () => void
 
   // Cart
@@ -46,6 +49,9 @@ export const useStore = create<AppStore>((set, get) => ({
   token: null,
   isAuthenticated: false,
   setUser: (user, token) => set({ user, token, isAuthenticated: true }),
+  updateUser: (updatedUser) => set((state) => ({ 
+    user: state.user ? { ...state.user, ...updatedUser } : null 
+  })),
   logout: () => set({ user: null, token: null, isAuthenticated: false, cart: [] }),
 
   // Cart

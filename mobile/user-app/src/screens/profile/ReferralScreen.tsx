@@ -29,6 +29,7 @@ export default function ReferralScreen({ navigation }: any) {
   }
 
   const handleSubmitReferral = async () => {
+    if (!user) return Alert.alert("Erreur", "Utilisateur non connecté")
     if (code.length < 5) return Alert.alert("Erreur", "Veuillez entrer un code de parrainage valide.")
     
     setIsLoading(true)

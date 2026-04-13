@@ -15,7 +15,7 @@ export function initOneSignal() {
   OneSignal.Notifications.requestPermission(true)
 
   // Listener : notification reçue en foreground
-  OneSignal.Notifications.addEventListener("foregroundWillDisplay", (event) => {
+  OneSignal.Notifications.addEventListener("foregroundWillDisplay", (event: any) => {
     event.preventDefault()
     event.notification.display()
   })
@@ -34,9 +34,12 @@ export function logout() {
 }
 
 export function getSubscriptionId(): string | null {
-  return OneSignal.User.pushSubscription.id ?? null
+  // optIn/id may vary by SDK version — use type assertion for safety
+  const sub = OneSignal.User.pushSubscription as any
+  return sub?.id ?? sub?.subscriptionId ?? null
 }
 
 export function isSubscribed(): boolean {
-  return OneSignal.User.pushSubscription.optedIn ?? false
+  const sub = OneSignal.User.pushSubscription as any
+  return sub?.optIn?.() ?? sub?.optedIn ?? false
 }

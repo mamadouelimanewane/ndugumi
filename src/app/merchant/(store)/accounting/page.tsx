@@ -141,7 +141,7 @@ function AccountingContent() {
                 <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: "#6B7280" }} dx={-10} />
                 <RechartsTooltip 
                   contentStyle={{ borderRadius: "12px", border: "none", boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)" }}
-                  formatter={(value: number, name: string) => [
+                  formatter={(value: any, name: any) => [
                     `${value.toLocaleString()} FCFA`, 
                     name === "net" ? "Bénéfice Net" : "Ventes Brutes"
                   ]}

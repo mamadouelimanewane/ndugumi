@@ -7,7 +7,7 @@ import {
   LayoutDashboard, Settings, Tag, Clock, Store, FileText, ShoppingCart,
   Image, Truck, Car, Users, Megaphone, Wallet, CreditCard, BarChart2,
   BarChart, ChevronDown, ChevronRight, LogOut, UserCog, Globe, Map,
-  Weight, Bookmark, Bell, DollarSign, Receipt, MapPin, Package,
+  Weight, Bookmark, Bell, DollarSign, Receipt, MapPin, Package, BrainCircuit
 } from "lucide-react"
 import { signOut } from "next-auth/react"
 import { cn } from "@/lib/utils"
@@ -24,6 +24,13 @@ const navigation: { section: string; items: NavItem[] }[] = [
     section: "",
     items: [
       { label: "Tableau de bord", href: "/dashboard", icon: <LayoutDashboard size={16} /> },
+    ],
+  },
+  {
+    section: "STRATÉGIE & IA",
+    items: [
+      { label: "Intelligence IA", href: "/analytics", icon: <BrainCircuit size={16} /> },
+      { label: "Marketing Hub", href: "/marketing", icon: <Megaphone size={16} /> },
     ],
   },
   {

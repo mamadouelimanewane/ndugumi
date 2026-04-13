@@ -19,6 +19,7 @@ import WalletScreen from "../screens/wallet/WalletScreen"
 import OrderDetailScreen from "../screens/orders/OrderDetailScreen"
 import StoreDetailScreen from "../screens/stores/StoreDetailScreen"
 import ComingSoonScreen from "../screens/ComingSoonScreen"
+import ReferralScreen from "../screens/profile/ReferralScreen"
 
 const Stack = createNativeStackNavigator()
 const Tab = createBottomTabNavigator()
