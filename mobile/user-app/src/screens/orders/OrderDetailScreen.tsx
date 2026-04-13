@@ -140,7 +140,17 @@ export default function OrderDetailScreen({ route, navigation }: any) {
 
         {/* Suivi en temps réel - Étapes */}
         <View style={styles.trackingCard}>
-          <Text style={styles.cardTitle}>🛥 Suivi en temps réel</Text>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: SPACING.md }}>
+            <Text style={styles.cardTitle}>🛥 Suivi en temps réel</Text>
+            {["PICKED_UP", "ACCEPTED", "ASSIGNED"].includes(order.status) && (
+              <TouchableOpacity 
+                style={styles.mapBtn} 
+                onPress={() => navigation.navigate("ActiveDelivery", { order })}
+              >
+                <Text style={styles.mapBtnText}>📍 Voir carte</Text>
+              </TouchableOpacity>
+            )}
+          </View>
           <View style={styles.steps}>
             {STEPS.map((step, idx) => (
               <View key={step.id} style={styles.stepRow}>
@@ -267,7 +277,9 @@ const styles = StyleSheet.create({
     borderRadius: RADIUS.lg, padding: SPACING.lg,
     borderLeftWidth: 4, borderLeftColor: COLORS.primary,
   },
-  cardTitle: { fontSize: FONTS.sizes.md, fontWeight: "800", color: COLORS.text, marginBottom: SPACING.md },
+  cardTitle: { fontSize: FONTS.sizes.md, fontWeight: "800", color: COLORS.text, marginBottom: 0 },
+  mapBtn: { backgroundColor: COLORS.primary + "15", paddingHorizontal: 12, paddingVertical: 6, borderRadius: RADIUS.md, borderWidth: 1, borderColor: COLORS.primary + "30" },
+  mapBtnText: { color: COLORS.primary, fontSize: 12, fontWeight: "800" },
   eta: { fontSize: FONTS.sizes.sm, color: COLORS.textSecondary, marginBottom: SPACING.md },
   etaTime: { color: COLORS.primary, fontWeight: "800" },
   steps: { gap: 0 },
