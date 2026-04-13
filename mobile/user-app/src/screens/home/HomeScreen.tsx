@@ -108,6 +108,16 @@ export default function HomeScreen({ navigation }: any) {
           contentContainerStyle={{ paddingHorizontal: SPACING.lg, gap: SPACING.md }}
           renderItem={({ item }) => (
             <View style={[styles.banner, { backgroundColor: item.bg || "#2E7D32", width: width - 32 }]}>
+              {item.imageUrl && (
+                <Image 
+                  source={{ uri: item.imageUrl }} 
+                  style={StyleSheet.absoluteFillObject} 
+                  resizeMode="cover" 
+                />
+              )}
+              {item.imageUrl && (
+                <View style={[StyleSheet.absoluteFillObject, { backgroundColor: 'rgba(0,0,0,0.3)' }]} />
+              )}
               <View style={styles.bannerContent}>
                 <Text style={styles.bannerTitle}>{item.title}</Text>
                 <Text style={styles.bannerSubtitle}>{item.subtitle}</Text>
@@ -115,7 +125,7 @@ export default function HomeScreen({ navigation }: any) {
                   <Text style={styles.bannerBtnText}>Commander →</Text>
                 </TouchableOpacity>
               </View>
-              <Text style={styles.bannerEmoji}>{item.emoji}</Text>
+              {item.emoji && <Text style={styles.bannerEmoji}>{item.emoji}</Text>}
             </View>
           )}
         />

@@ -8,24 +8,19 @@ export async function GET() {
       orderBy: { sequence: 'asc' }
     })
 
-    if (banners.length === 0) {
-      // Return hardcoded if DB is empty for now
-      return NextResponse.json([
-        { id: "1", title: "Produits Frais\ndu Sénégal", subtitle: "Livraison en 30 min", bg: "#2E7D32", emoji: "🥬" },
-        { id: "2", title: "Poisson Frais\ndu Jour", subtitle: "-20% sur les produits halieutiques", bg: "#00838F", emoji: "🐟" },
-      ])
-    }
-
-    const formatted = banners.map(b => ({
+    const formatted = banners.map((b, idx) => ({
       id: b.id,
       title: b.title,
-      subtitle: "Offre spéciale",
-      bg: "#2E7D32",
-      emoji: b.image // Assuming emoji or URL
+      subtitle: "Promotion exclusive",
+      // Map sequence to some colors for variety if missing
+      bg: idx % 2 === 0 ? "#6366F1" : "#10B981",
+      emoji: b.image.startsWith("/") ? "" : b.image, // Use emoji if not a path
+      imageUrl: b.image.startsWith("/") ? `https://ndugumi.vercel.app${b.image}` : null
     }))
 
     return NextResponse.json(formatted)
   } catch (error: any) {
+    console.error("Slider API Error:", error)
     return NextResponse.json({ message: error.message }, { status: 500 })
   }
 }
