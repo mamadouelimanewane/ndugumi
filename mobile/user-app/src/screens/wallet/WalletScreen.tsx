@@ -1,41 +1,75 @@
-import React, { useState } from "react"
+import React, { useState, useEffect } from "react"
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
-  SafeAreaView, TextInput, Modal, Alert,
+  SafeAreaView, TextInput, Modal, Alert, ActivityIndicator,
 } from "react-native"
 import { COLORS, FONTS, SPACING, RADIUS } from "../../constants/theme"
 import { useStore } from "../../store/useStore"
-
-const TRANSACTIONS = [
-  { id: "1", type: "credit", label: "Recharge portefeuille", method: "Orange Money", amount: 5000, date: "Aujourd'hui, 10:00" },
-  { id: "2", type: "debit", label: "Paiement commande #1234", method: "Wallet", amount: -3200, date: "Hier, 14:30" },
-  { id: "3", type: "credit", label: "Remboursement commande #1198", method: "Wallet", amount: 1500, date: "Il y a 3 jours" },
-  { id: "4", type: "debit", label: "Paiement commande #1185", method: "Wallet", amount: -8750, date: "Il y a 5 jours" },
-  { id: "5", type: "credit", label: "Bonus fidélité", method: "Système", amount: 500, date: "Il y a 1 semaine" },
-]
+import axios from "axios"
 
 const PAYMENT_METHODS = [
-  { id: "orange", label: "Orange Money", emoji: "🟠", color: "#FF6600" },
-  { id: "wave", label: "Wave", emoji: "🔵", color: "#1B74E4" },
-  { id: "free", label: "Free Money", emoji: "🔴", color: "#CC0000" },
-  { id: "card", label: "Carte bancaire", emoji: "💳", color: "#6B7280" },
+  { id: "Orange Money", label: "Orange Money", emoji: "🟠", color: "#FF6600" },
+  { id: "Wave", label: "Wave", emoji: "🔵", color: "#1B74E4" },
+  { id: "Free Money", label: "Free Money", emoji: "🔴", color: "#CC0000" },
 ]
 
 export default function WalletScreen({ navigation }: any) {
   const user = useStore((s) => s.user)
-  const balance = user?.walletBalance ?? 12350
+  const setUser = useStore((s) => s.setUser)
+  const balance = user?.walletMoney ?? 0
+  
   const [showRecharge, setShowRecharge] = useState(false)
   const [amount, setAmount] = useState("")
-  const [selectedMethod, setSelectedMethod] = useState("orange")
+  const [selectedMethod, setSelectedMethod] = useState("Orange Money")
+  const [isLoading, setIsLoading] = useState(false)
+  const [transactions, setTransactions] = useState<any[]>([])
 
-  const handleRecharge = () => {
+  const API_URL = process.env.EXPO_PUBLIC_API_URL || "https://ndugumi.vercel.app/api"
+
+  useEffect(() => {
+    if (user?.id) fetchHistory()
+  }, [user?.id])
+
+  const fetchHistory = async () => {
+    try {
+      const res = await axios.get(`${API_URL}/wallet/history?userId=${user.id}`)
+      setTransactions(res.data)
+    } catch (error) {
+      console.log("History err", error)
+    }
+  }
+
+  const handleRecharge = async () => {
     if (!amount || Number(amount) < 500) {
       Alert.alert("Montant invalide", "Le montant minimum est 500 FCFA")
       return
     }
-    Alert.alert("Recharge initiée", `Recharge de ${Number(amount).toLocaleString()} FCFA via ${PAYMENT_METHODS.find(p => p.id === selectedMethod)?.label}. Suivez les instructions sur votre téléphone.`)
-    setShowRecharge(false)
-    setAmount("")
+    setIsLoading(true)
+
+    // Simulate an interaction with Wave/Orange API latency
+    setTimeout(async () => {
+      try {
+        const res = await axios.post(`${API_URL}/wallet/topup`, {
+          userId: user.id,
+          amount: Number(amount),
+          method: selectedMethod
+        })
+        
+        // Update local user context
+        if (res.data.walletMoney !== undefined) {
+          setUser({ ...user, walletMoney: res.data.walletMoney })
+        }
+        
+        setShowRecharge(false)
+        setAmount("")
+        fetchHistory()
+        Alert.alert("Recharge réussie", `Votre portefeuille a été crédité de ${Number(amount).toLocaleString()} FCFA via ${selectedMethod}.`)
+      } catch (error: any) {
+        Alert.alert("Erreur de recharge", error?.response?.data?.message || "Une erreur s'est produite lors de la connexion à l'opérateur.")
+      } finally {
+        setIsLoading(false)
+      }
+    }, 2000)
   }
 
   return (
@@ -67,54 +101,45 @@ export default function WalletScreen({ navigation }: any) {
           </View>
         </View>
 
-        {/* Raccourcis recharge */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Recharge rapide</Text>
-          <View style={styles.quickAmounts}>
-            {[1000, 2000, 5000, 10000].map((val) => (
-              <TouchableOpacity key={val} style={styles.quickBtn} onPress={() => { setAmount(String(val)); setShowRecharge(true) }}>
-                <Text style={styles.quickBtnText}>{val.toLocaleString()}</Text>
-                <Text style={styles.quickBtnSub}>FCFA</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View>
-
         {/* Historique */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Historique</Text>
+          <Text style={styles.sectionTitle}>Historique des transactions</Text>
           <View style={styles.transactionList}>
-            {TRANSACTIONS.map((tx) => (
+            {transactions.length > 0 ? transactions.map((tx) => (
               <View key={tx.id} style={styles.txRow}>
                 <View style={[styles.txIcon, { backgroundColor: tx.type === "credit" ? "#E8F5E9" : "#FFEBEE" }]}>
                   <Text>{tx.type === "credit" ? "⬆️" : "⬇️"}</Text>
                 </View>
                 <View style={styles.txInfo}>
-                  <Text style={styles.txLabel}>{tx.label}</Text>
-                  <Text style={styles.txMeta}>{tx.method} · {tx.date}</Text>
+                  <Text style={styles.txLabel}>{tx.description || tx.method}</Text>
+                  <Text style={styles.txMeta}>{new Date(tx.createdAt).toLocaleDateString()} {new Date(tx.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</Text>
                 </View>
                 <Text style={[styles.txAmount, { color: tx.type === "credit" ? COLORS.success : COLORS.danger }]}>
-                  {tx.type === "credit" ? "+" : ""}{tx.amount.toLocaleString()} FCFA
+                  {tx.type === "credit" ? "+" : "-"}{tx.amount.toLocaleString()} FCFA
                 </Text>
               </View>
-            ))}
+            )) : (
+              <Text style={{ padding: SPACING.lg, textAlign: 'center', color: COLORS.gray }}>Aucune transaction récente.</Text>
+            )}
           </View>
         </View>
 
         <View style={{ height: SPACING.xxl }} />
       </ScrollView>
 
-      {/* Modal Recharge */}
-      <Modal visible={showRecharge} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setShowRecharge(false)}>
+      {/* Modal Recharge Simulator */}
+      <Modal visible={showRecharge} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => !isLoading && setShowRecharge(false)}>
         <SafeAreaView style={styles.modal}>
           <View style={styles.modalHeader}>
             <Text style={styles.modalTitle}>Recharger mon portefeuille</Text>
-            <TouchableOpacity onPress={() => setShowRecharge(false)}>
-              <Text style={styles.modalClose}>✕</Text>
-            </TouchableOpacity>
+            {!isLoading && (
+              <TouchableOpacity onPress={() => setShowRecharge(false)}>
+                <Text style={styles.modalClose}>✕</Text>
+              </TouchableOpacity>
+            )}
           </View>
           <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: SPACING.lg }}>
-            <Text style={styles.inputLabel}>Montant (FCFA)</Text>
+            <Text style={styles.inputLabel}>Montant à recharger (FCFA)</Text>
             <TextInput
               style={styles.input}
               value={amount}
@@ -122,19 +147,23 @@ export default function WalletScreen({ navigation }: any) {
               placeholder="Ex: 5000"
               keyboardType="numeric"
               placeholderTextColor={COLORS.gray}
+              editable={!isLoading}
             />
             <View style={styles.quickAmounts}>
               {[1000, 2000, 5000, 10000].map((val) => (
                 <TouchableOpacity key={val} style={[styles.quickBtn, amount === String(val) && { backgroundColor: COLORS.primary }]}
+                  disabled={isLoading}
                   onPress={() => setAmount(String(val))}>
                   <Text style={[styles.quickBtnText, amount === String(val) && { color: COLORS.white }]}>{val.toLocaleString()}</Text>
                 </TouchableOpacity>
               ))}
             </View>
-            <Text style={[styles.inputLabel, { marginTop: SPACING.lg }]}>Mode de paiement</Text>
+            <Text style={[styles.inputLabel, { marginTop: SPACING.lg }]}>Opérateur Mobile Money (Simulation)</Text>
             <View style={{ gap: SPACING.sm }}>
               {PAYMENT_METHODS.map((pm) => (
-                <TouchableOpacity key={pm.id} style={[styles.payMethodBtn, selectedMethod === pm.id && { borderColor: pm.color, backgroundColor: `${pm.color}10` }]}
+                <TouchableOpacity key={pm.id} 
+                  disabled={isLoading}
+                  style={[styles.payMethodBtn, selectedMethod === pm.id && { borderColor: pm.color, backgroundColor: `${pm.color}10` }]}
                   onPress={() => setSelectedMethod(pm.id)}>
                   <Text style={{ fontSize: 24 }}>{pm.emoji}</Text>
                   <Text style={[styles.payMethodLabel, selectedMethod === pm.id && { color: pm.color, fontWeight: "700" }]}>{pm.label}</Text>
@@ -144,8 +173,15 @@ export default function WalletScreen({ navigation }: any) {
             </View>
           </ScrollView>
           <View style={{ padding: SPACING.lg }}>
-            <TouchableOpacity style={styles.rechargeBtn} onPress={handleRecharge}>
-              <Text style={styles.rechargeBtnText}>Recharger {amount ? `${Number(amount).toLocaleString()} FCFA` : ""}</Text>
+            <TouchableOpacity style={[styles.rechargeBtn, isLoading && { opacity: 0.7 }]} disabled={isLoading} onPress={handleRecharge}>
+              {isLoading ? (
+                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                   <ActivityIndicator color={COLORS.white} />
+                   <Text style={styles.rechargeBtnText}>Connexion en cours...</Text>
+                 </View>
+              ) : (
+                <Text style={styles.rechargeBtnText}>Valider {amount ? `${Number(amount).toLocaleString()} FCFA` : ""}</Text>
+              )}
             </TouchableOpacity>
           </View>
         </SafeAreaView>

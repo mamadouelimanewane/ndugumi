@@ -115,11 +115,11 @@ function AppStack() {
       <Stack.Screen name="Wallet" component={WalletScreen} />
       <Stack.Screen name="OrderDetail" component={OrderDetailScreen} />
       <Stack.Screen name="StoreDetail" component={StoreDetailScreen} />
+      <Stack.Screen name="Referral" component={ReferralScreen} />
       <Stack.Screen name="EditProfile" component={ComingSoonScreen} initialParams={{ title: "Modifier le profil" }} />
       <Stack.Screen name="Addresses" component={ComingSoonScreen} initialParams={{ title: "Mes adresses" }} />
       <Stack.Screen name="Reviews" component={ComingSoonScreen} initialParams={{ title: "Mes avis" }} />
       <Stack.Screen name="Promo" component={ComingSoonScreen} initialParams={{ title: "Codes promo" }} />
-      <Stack.Screen name="Referral" component={ComingSoonScreen} initialParams={{ title: "Parrainage" }} />
       <Stack.Screen name="Support" component={ComingSoonScreen} initialParams={{ title: "Aide & Support" }} />
       <Stack.Screen name="About" component={ComingSoonScreen} initialParams={{ title: "À propos" }} />
     </Stack.Navigator>

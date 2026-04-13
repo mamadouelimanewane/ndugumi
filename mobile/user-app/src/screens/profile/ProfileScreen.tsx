@@ -47,7 +47,7 @@ export default function ProfileScreen({ navigation }: any) {
       <View style={styles.walletCard}>
         <View>
           <Text style={styles.walletLabel}>Mon Portefeuille</Text>
-          <Text style={styles.walletBalance}>0.00 FCFA</Text>
+          <Text style={styles.walletBalance}>{(user?.walletMoney ?? 0).toLocaleString()} FCFA</Text>
         </View>
         <TouchableOpacity style={styles.rechargeBtn} onPress={() => navigation.navigate("Wallet")}>
           <Text style={styles.rechargeBtnText}>+ Recharger</Text>
