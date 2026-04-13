@@ -1,28 +1,53 @@
 import { NextResponse } from "next/server"
+import { prisma } from "@/lib/prisma"
+import bcrypt from "bcryptjs"
 
-// Route ultra-simplifiée pour diagnostic technique
 export async function POST(req: Request) {
   try {
-    const body = await req.json()
-    const { email, password } = body
+    const { email, password } = await req.json()
 
-    // Données de test en dur (bypass DB)
-    if (email === "770000000" && password === "123456") {
-      return NextResponse.json({
-        user: { id: "test", name: "Test User", phone: "770000000", email: "test@ndugumi.com", walletMoney: 1000 },
-        token: "mock-token",
-      }, { headers: { "Access-Control-Allow-Origin": "*" } })
+    if (!email || !password) {
+      return NextResponse.json({ message: "Email et mot de passe requis" }, { status: 400 })
     }
 
-    return NextResponse.json({ message: "Identifiants invalides (test)" }, { 
-      status: 401,
+    // Direct match for phone OR email
+    const user = await prisma.user.findFirst({
+      where: {
+        OR: [
+          { email: email },
+          { phone: email }
+        ]
+      }
+    })
+
+    if (!user) {
+      return NextResponse.json({ message: "Utilisateur non trouvé" }, { status: 401 })
+    }
+
+    const isValid = await bcrypt.compare(password, user.password)
+    if (!isValid) {
+      return NextResponse.json({ message: "Mot de passe incorrect" }, { status: 401 })
+    }
+
+    // Mock token for now (in real app use JWT)
+    const token = `ndugumi_${user.id}_${Date.now()}`
+
+    return NextResponse.json({
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        phone: user.phone,
+        walletMoney: user.walletMoney,
+      },
+      token: token
+    }, {
       headers: { "Access-Control-Allow-Origin": "*" }
     })
+
   } catch (error: any) {
-    return NextResponse.json({ message: "Erreur serveur: " + error.message }, { 
-      status: 500,
-      headers: { "Access-Control-Allow-Origin": "*" }
-    })
+    console.error("Login error:", error)
+    return NextResponse.json({ message: "Erreur serveur: " + error.message }, { status: 500 })
   }
 }
 

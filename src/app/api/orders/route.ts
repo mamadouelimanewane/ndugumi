@@ -1,34 +1,47 @@
 import { NextResponse } from "next/server"
+import { prisma } from "@/lib/prisma"
+import { getAuthUser } from "@/lib/auth"
 
 export async function POST(req: Request) {
   try {
-    const orderData = await req.json()
-    console.log("New order received:", orderData)
+    const user = await getAuthUser(req)
+    if (!user) return NextResponse.json({ message: "Non autorisé" }, { status: 401 })
 
-    // Simulation de création de commande réussie
-    const newOrder = {
-      id: "ord-" + Math.random().toString(36).substr(2, 9),
-      ...orderData,
-      status: "PENDING",
-      createdAt: new Date().toISOString()
-    }
+    const { storeId, total, address, items } = await req.json()
 
-    const response = NextResponse.json(newOrder)
-    response.headers.set("Access-Control-Allow-Origin", "*")
-    return response
+    const newOrder = await prisma.order.create({
+      data: {
+        userId: user.id,
+        storeId: storeId,
+        total: total,
+        address: address,
+        status: "Pending",
+        paymentStatus: "Pending",
+        orderId: Math.floor(1000 + Math.random() * 9000).toString(), // Simple numeric ID
+      }
+    })
 
-  } catch (error) {
-    return NextResponse.json({ message: "Erreur lors de la création de la commande" }, { status: 500 })
+    return NextResponse.json(newOrder, { headers: { "Access-Control-Allow-Origin": "*" } })
+
+  } catch (error: any) {
+    console.error("Order creation error:", error)
+    return NextResponse.json({ message: error.message }, { status: 500 })
   }
 }
 
-export async function GET() {
-   // Mock list of orders
-   const orders = [
-     { id: "1", merchantName: "Marché Keur Massar", total: 4500, status: "COMPLETED", date: "2024-03-20" },
-     { id: "2", merchantName: "Marché Rufisque", total: 12000, status: "DELIVERING", date: "2024-03-21" },
-   ]
-   const response = NextResponse.json(orders)
-   response.headers.set("Access-Control-Allow-Origin", "*")
-   return response
+export async function GET(req: Request) {
+  try {
+    const user = await getAuthUser(req)
+    if (!user) return NextResponse.json({ message: "Non autorisé" }, { status: 401 })
+
+    const orders = await prisma.order.findMany({
+      where: { userId: user.id },
+      include: { store: true },
+      orderBy: { createdAt: 'desc' }
+    })
+
+    return NextResponse.json(orders, { headers: { "Access-Control-Allow-Origin": "*" } })
+  } catch (error: any) {
+    return NextResponse.json({ message: error.message }, { status: 500 })
+  }
 }

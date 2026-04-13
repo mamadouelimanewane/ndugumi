@@ -14,13 +14,7 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.ndugumi.driverapp",
-      "buildNumber": "2",
-      "infoPlist": {
-        "NSLocationWhenInUseUsageDescription": "NDUGUMi Driver utilise votre localisation pour les livraisons.",
-        "NSLocationAlwaysAndWhenInUseUsageDescription": "NDUGUMi Driver utilise votre localisation en arrière-plan pour le suivi en temps réel.",
-        "NSCameraUsageDescription": "NDUGUMi Driver utilise la caméra pour les documents d'identification.",
-        "NSPhotoLibraryUsageDescription": "NDUGUMi Driver accède à vos photos pour les documents."
-      }
+      "buildNumber": "2"
     },
     "android": {
       "package": "com.ndugumi.driverapp",
@@ -35,20 +29,12 @@
         }
       },
       "permissions": [
-        "ACCESS_FINE_LOCATION",
-        "ACCESS_COARSE_LOCATION",
-        "ACCESS_BACKGROUND_LOCATION",
         "CAMERA",
         "READ_EXTERNAL_STORAGE",
         "WRITE_EXTERNAL_STORAGE",
-        "RECEIVE_BOOT_COMPLETED",
         "VIBRATE",
-        "FOREGROUND_SERVICE",
-        "FOREGROUND_SERVICE_LOCATION"
+        "RECORD_AUDIO"
       ]
-    },
-    "web": {
-      "favicon": "./assets/favicon.png"
     },
     "plugins": [
       [
@@ -61,8 +47,7 @@
       [
         "expo-location",
         {
-          "locationAlwaysAndWhenInUsePermission": "NDUGUMi Driver utilise votre GPS pour les livraisons en temps réel.",
-          "isIosBackgroundLocationEnabled": true,
+          "locationAlwaysAndWhenInUsePermission": "NDUGUMi Driver utilise votre GPS pour les livraisons.",
           "isAndroidBackgroundLocationEnabled": true
         }
       ],
@@ -77,23 +62,6 @@
     ],
     "extra": {
       "eas": {
-        "build": {
-          "experimental": {
-            "ios": {
-              "appExtensions": [
-                {
-                  "targetName": "OneSignalNotificationServiceExtension",
-                  "bundleIdentifier": "com.ndugumi.driverapp.OneSignalNotificationServiceExtension",
-                  "entitlements": {
-                    "com.apple.security.application-groups": [
-                      "group.com.ndugumi.driverapp.onesignal"
-                    ]
-                  }
-                }
-              ]
-            }
-          }
-        },
         "projectId": "16c79e64-3d57-481f-80f9-bf7234ee3fcb"
       }
     },

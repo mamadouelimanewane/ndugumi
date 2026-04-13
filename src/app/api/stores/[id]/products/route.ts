@@ -1,29 +1,36 @@
 import { NextResponse } from "next/server"
+import { prisma } from "@/lib/prisma"
 
-const mockProducts: Record<string, any[]> = {
-  "s1": [
-    { id: "p1", name: "Oignons Rouges", price: 1200, emoji: "🧅" },
-    { id: "p2", name: "Pommes de Terre", price: 800, emoji: "🥔" },
-    { id: "p3", name: "Piment Vert", price: 500, emoji: "🌶️" },
-    { id: "p4", name: "Ail Frais", price: 600, emoji: "🧄" },
-  ],
-  "s2": [
-    { id: "p5", name: "Thiof de Dakar", price: 8500, emoji: "🐟" },
-    { id: "p6", name: "Crevettes Roses", price: 4500, emoji: "🦐" },
-    { id: "p7", name: "Daurade Royale", price: 3200, emoji: "🐠" },
-  ],
-  "s3": [
-    { id: "p8", name: "Gigot d'Agneau", price: 7500, emoji: "🥩" },
-    { id: "p9", name: "Filet de Boeuf", price: 5500, emoji: "🐂" },
-    { id: "p10", name: "Poulet Fermier", price: 3000, emoji: "🍗" },
-  ]
+export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
+  try {
+    const { id } = await params
+    
+    const products = await prisma.product.findMany({
+      where: { storeId: id, status: "Active" },
+    })
+
+    const formatted = products.map(p => ({
+      id: p.id,
+      name: p.name,
+      price: p.price,
+      description: p.description,
+      image: p.image || "📦",
+      category: p.category
+    }))
+
+    return NextResponse.json(formatted, { headers: { "Access-Control-Allow-Origin": "*" } })
+  } catch (error: any) {
+    return NextResponse.json({ message: error.message }, { status: 500 })
+  }
 }
 
-export async function GET(req: Request, { params }: { params: { id: string } }) {
-  const storeId = params.id
-  const products = mockProducts[storeId] || []
-  
-  const response = NextResponse.json(products)
-  response.headers.set("Access-Control-Allow-Origin", "*")
-  return response
+export async function OPTIONS() {
+  return new NextResponse(null, {
+    status: 204,
+    headers: {
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "GET, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type, Authorization",
+    }
+  })
 }

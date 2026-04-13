@@ -7,37 +7,30 @@ export async function GET(req: Request) {
     const user = await getAuthUser(req)
     if (!user) return NextResponse.json({ message: "Non autorisé" }, { status: 401 })
 
-    return NextResponse.json({ balance: user.walletMoney }, { headers: { "Access-Control-Allow-Origin": "*" } })
+    // Return profile without password
+    const { password, ...safeUser } = user
+
+    return NextResponse.json(safeUser, { headers: { "Access-Control-Allow-Origin": "*" } })
   } catch (error: any) {
     return NextResponse.json({ message: error.message }, { status: 500 })
   }
 }
 
-export async function POST(req: Request) {
+export async function PUT(req: Request) {
   try {
     const user = await getAuthUser(req)
     if (!user) return NextResponse.json({ message: "Non autorisé" }, { status: 401 })
 
-    const { amount } = await req.json()
-    if (!amount || amount <= 0) return NextResponse.json({ message: "Montant invalide" }, { status: 400 })
+    const { name, email, phone } = await req.json()
 
     const updatedUser = await prisma.user.update({
       where: { id: user.id },
-      data: { walletMoney: { increment: amount } }
+      data: { name, email, phone }
     })
 
-    // Log transaction
-    await prisma.transaction.create({
-      data: {
-        userId: user.id,
-        amount: amount,
-        type: "Credit",
-        description: "Recharge portefeuille mobile",
-        status: "Completed"
-      }
-    })
+    const { password, ...safeUser } = updatedUser
 
-    return NextResponse.json({ balance: updatedUser.walletMoney }, { headers: { "Access-Control-Allow-Origin": "*" } })
+    return NextResponse.json(safeUser, { headers: { "Access-Control-Allow-Origin": "*" } })
   } catch (error: any) {
     return NextResponse.json({ message: error.message }, { status: 500 })
   }
@@ -48,7 +41,7 @@ export async function OPTIONS() {
     status: 204,
     headers: {
       "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+      "Access-Control-Allow-Methods": "GET, PUT, OPTIONS",
       "Access-Control-Allow-Headers": "Content-Type, Authorization",
     }
   })

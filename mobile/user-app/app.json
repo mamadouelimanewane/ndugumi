@@ -23,7 +23,7 @@
       }
     },
     "android": {
-      "package": "com.ndugumi.userapp",
+      "package": "com.ndugumi.userapp.test",
       "versionCode": 2,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",

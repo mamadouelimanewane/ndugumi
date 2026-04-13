@@ -4,15 +4,16 @@ generator client {
 }
 
 datasource db {
-  provider = "mongodb"
+  provider = "postgresql"
 }
 
 model User {
-  id           String   @id @default(auto()) @map("_id") @db.ObjectId
-  userId       Int      @unique
+  id           String   @id @default(uuid())
+  userId       Int      @unique @default(autoincrement())
   name         String
   phone        String?
   email        String   @unique
+  password     String   @default("") // Adding password for Auth
   walletMoney  Float    @default(0)
   userType     String   @default("Retail")
   signupType   String   @default("App/Admin")
@@ -25,11 +26,12 @@ model User {
 }
 
 model Driver {
-  id             String   @id @default(auto()) @map("_id") @db.ObjectId
-  driverId       Int      @unique
+  id             String   @id @default(uuid())
+  driverId       Int      @unique @default(autoincrement())
   name           String
   phone          String?
   email          String   @unique
+  password       String   @default("") // Adding password for Auth
   serviceArea    String?
   country        String?
   totalOrders    Int      @default(0)
@@ -46,7 +48,7 @@ model Driver {
 }
 
 model Store {
-  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  id          String    @id @default(uuid())
   name        String
   phone       String?
   email       String    @unique
@@ -66,23 +68,23 @@ model Store {
 }
 
 model Product {
-  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  id          String   @id @default(uuid())
   name        String
   description String?
   price       Float
   image       String?
   status      String   @default("Active")
   category    String?
-  storeId     String   @db.ObjectId
+  storeId     String
   store       Store    @relation(fields: [storeId], references: [id])
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
 
 model Order {
-  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  id        String   @id @default(uuid())
   orderId   String   @unique
-  storeId   String   @db.ObjectId
+  storeId   String
   store     Store    @relation(fields: [storeId], references: [id])
   userId    String?
   driverId  String?
@@ -95,7 +97,7 @@ model Order {
 }
 
 model Category {
-  id             String   @id @default(auto()) @map("_id") @db.ObjectId
+  id             String   @id @default(uuid())
   name           String
   segment        String   @default("Epicerie")
   parentCategory String?
@@ -107,7 +109,7 @@ model Category {
 }
 
 model PromoCode {
-  id        String    @id @default(auto()) @map("_id") @db.ObjectId
+  id        String    @id @default(uuid())
   code      String    @unique
   discount  Float
   type      String    @default("Percentage")
@@ -120,7 +122,7 @@ model PromoCode {
 }
 
 model Country {
-  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  id        String   @id @default(uuid())
   name      String
   code      String   @unique
   status    String   @default("Active")
@@ -128,7 +130,7 @@ model Country {
 }
 
 model ServiceArea {
-  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  id        String   @id @default(uuid())
   name      String
   country   String
   status    String   @default("Active")
@@ -136,7 +138,7 @@ model ServiceArea {
 }
 
 model Vehicle {
-  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  id        String   @id @default(uuid())
   name      String
   image     String?
   status    String   @default("Active")
@@ -144,7 +146,7 @@ model Vehicle {
 }
 
 model SliderBanner {
-  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  id        String   @id @default(uuid())
   title     String?
   image     String
   link      String?
@@ -154,7 +156,7 @@ model SliderBanner {
 }
 
 model Notification {
-  id        String    @id @default(auto()) @map("_id") @db.ObjectId
+  id        String    @id @default(uuid())
   title     String
   message   String
   target    String    @default("All")
@@ -164,7 +166,7 @@ model Notification {
 }
 
 model Transaction {
-  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  id          String   @id @default(uuid())
   userId      String?
   driverId    String?
   amount      Float
@@ -175,7 +177,7 @@ model Transaction {
 }
 
 model Admin {
-  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  id        String   @id @default(uuid())
   name      String
   email     String   @unique
   password  String
